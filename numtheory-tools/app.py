@@ -12,6 +12,9 @@ from algos.fastpow import fast_pow_mod
 from algos.index_calculus import index_calculus
 from algos.elliptic import (ec_add, ec_double, ec_scalar_mult, ec_order,
                             ec_bsgs, _is_on_curve)
+from algos.numcalc import (number_properties, element_order,
+                           legendre_symbol_info, jacobi_info, check_b_smooth)
+from algos.rings import ring_info
 
 app = Flask(__name__)
 
@@ -320,6 +323,82 @@ def tools_page():
 @app.route('/advanced')
 def advanced_page():
     return render_template('advanced.html')
+
+@app.route('/numcalc')
+def numcalc_page():
+    return render_template('numcalc.html')
+
+@app.route('/rings')
+def rings_page():
+    return render_template('rings.html')
+
+@app.route('/theory')
+def theory_page():
+    return render_template('theory.html')
+
+
+# ───────── API: числовой калькулятор ─────────
+@app.route('/api/numcalc', methods=['POST'])
+def api_numcalc():
+    try:
+        data = request.get_json()
+        what = data.get('what', 'properties')
+
+        if what == 'properties':
+            n = int(data.get('n', 0))
+            if n < 2:
+                return jsonify({'error': 'n должно быть ≥ 2'}), 400
+            return jsonify({'success': True, 'data': number_properties(n)})
+
+        if what == 'order':
+            a = int(data.get('a', 0))
+            n = int(data.get('n', 0))
+            if n < 2:
+                return jsonify({'error': 'n должно быть ≥ 2'}), 400
+            return jsonify({'success': True, 'data': element_order(a, n)})
+
+        if what == 'legendre':
+            a = int(data.get('a', 0))
+            p = int(data.get('p', 0))
+            result = legendre_symbol_info(a, p)
+            if 'error' in result:
+                return jsonify({'error': result['error']}), 400
+            return jsonify({'success': True, 'data': result})
+
+        if what == 'jacobi':
+            a = int(data.get('a', 0))
+            n = int(data.get('n', 0))
+            result = jacobi_info(a, n)
+            if 'error' in result:
+                return jsonify({'error': result['error']}), 400
+            return jsonify({'success': True, 'data': result})
+
+        if what == 'smooth':
+            n = int(data.get('n', 0))
+            B = int(data.get('B', 10))
+            return jsonify({'success': True, 'data': check_b_smooth(n, B)})
+
+        return jsonify({'error': 'Неизвестный запрос'}), 400
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+# ───────── API: справочник колец ─────────
+@app.route('/api/rings', methods=['POST'])
+def api_rings():
+    try:
+        data = request.get_json()
+        ring_type = data.get('ring_type', 'Z')      # Z или Q
+        form = data.get('form', 'sqrt')              # sqrt или cbrt
+        d = int(data.get('d', 0))
+        result = ring_info(ring_type, form, d)
+        return jsonify({'success': True, 'data': result})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/poly', methods=['POST'])

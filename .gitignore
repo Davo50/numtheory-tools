@@ -8,8 +8,9 @@
 .project
 .pydevproject
 .settings/
- .venv/
- 
+.venv/
+__pycache__/
+
 # ─── macOS / Windows / Linux ────────────────────────────────
 .DS_Store
 .AppleDouble

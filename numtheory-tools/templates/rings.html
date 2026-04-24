@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справочник колец</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+               background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+               min-height: 100vh; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2.2em; margin-bottom: 30px;
+             background: linear-gradient(90deg, #667eea, #764ba2);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+                border-radius: 16px; padding: 30px; margin-bottom: 20px; }
+        .ring-builder { display: flex; gap: 10px; align-items: center;
+                        flex-wrap: wrap; font-size: 1.5em;
+                        padding: 20px; background: rgba(0,0,0,.25);
+                        border-radius: 12px; margin-bottom: 20px;
+                        font-family: 'Cambria Math', 'Times New Roman', serif; }
+        .ring-builder select, .ring-builder input {
+            padding: 6px 10px; border-radius: 6px; font-size: .8em;
+            background: rgba(255,255,255,.08); color: #fff;
+            border: 1px solid rgba(255,255,255,.2);
+            font-family: 'Consolas', monospace;
+        }
+        .ring-builder input { width: 80px; }
+        .btn-run { width: 100%; padding: 14px; border: none; border-radius: 10px;
+                  background: linear-gradient(135deg, #667eea, #764ba2);
+                  color: #fff; font-size: 1.1em; font-weight: 700; cursor: pointer;
+                  transition: all .3s; }
+        .btn-run:hover { transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(102,126,234,.5); }
+        .result-card { display: none; } .result-card.visible { display: block; }
+        .verdict { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        .verdict-card { padding: 20px; border-radius: 12px; text-align: center; }
+        .verdict-card.yes { background: rgba(168,255,120,.15); border: 2px solid rgba(168,255,120,.3); }
+        .verdict-card.no { background: rgba(255,107,107,.1); border: 2px solid rgba(255,107,107,.3); }
+        .verdict-card.unknown { background: rgba(255,217,61,.1); border: 2px solid rgba(255,217,61,.3); }
+        .verdict-card .label { font-size: .9em; color: #b0b8d0; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .05em; }
+        .verdict-card .answer { font-size: 2em; font-weight: 700; }
+        .verdict-card.yes .answer { color: #a8ff78; }
+        .verdict-card.no .answer { color: #ff6b6b; }
+        .verdict-card.unknown .answer { color: #ffd93d; }
+        .info-card { padding: 15px; background: rgba(102,126,234,.08);
+                     border-left: 3px solid #667eea; border-radius: 0 8px 8px 0;
+                     margin-bottom: 12px; }
+        .info-card .label { font-size: .8em; color: #8890a8; text-transform: uppercase; margin-bottom: 6px; }
+        .info-card .text { color: #e0e0e0; line-height: 1.6; }
+        .info-card .formula { font-family: 'Cambria Math', 'Times New Roman', serif;
+                             font-size: 1.1em; color: #a0a8d0; }
+        .examples-block { margin-top: 10px; padding: 12px;
+                         background: rgba(0,0,0,.15); border-radius: 8px;
+                         font-size: .9em; color: #8890a8; }
+        .examples-block code { cursor: pointer; background: rgba(102,126,234,.15);
+                              padding: 4px 10px; border-radius: 5px; margin: 3px;
+                              display: inline-block; color: #c0c8e8;
+                              font-family: 'Cambria Math', serif; }
+        .examples-block code:hover { background: rgba(102,126,234,.3); color: #fff; }
+        .theory-note { margin-top: 15px; padding: 12px 15px;
+                       background: rgba(255,217,61,.06); border-left: 3px solid #ffd93d;
+                       border-radius: 0 8px 8px 0; font-size: .85em; color: #c0c8a0; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">F₂[X] / Монтгомери</a>
+          <a href="/numcalc" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Свойства чисел</a>
+          <a href="/rings" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">Кольца</a>
+          <a href="/theory" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Теория</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🔗 Справочник колец</h1>
+
+        <div class="card">
+            <p style="color: #b0b8d0; margin-bottom: 20px; line-height: 1.6;">
+                Для задачи типа «являются ли кольца Q[√d], Z[√d] факториальными, евклидовыми?».
+                Собери кольцо и нажми «Проверить» — получишь ответ, формулу нормы и обоснование.
+            </p>
+
+            <div class="ring-builder">
+                <select id="type">
+                    <option value="Z" selected>ℤ</option>
+                    <option value="Q">ℚ</option>
+                </select>
+                <span>[</span>
+                <select id="form">
+                    <option value="sqrt" selected>√</option>
+                    <option value="cbrt">∛</option>
+                </select>
+                <input type="number" id="d" value="-1">
+                <span>]</span>
+            </div>
+
+            <div class="examples-block">
+                Примеры из КР:
+                <code onclick="setRing('Z','sqrt',-1)">Z[i] = Z[√−1]</code>
+                <code onclick="setRing('Q','sqrt',-1)">Q[i]</code>
+                <code onclick="setRing('Z','sqrt',-5)">Z[i√5] = Z[√−5]</code>
+                <code onclick="setRing('Q','sqrt',-5)">Q[i√5]</code>
+                <code onclick="setRing('Z','cbrt',18)">Z[∛18]</code>
+                <code onclick="setRing('Q','cbrt',18)">Q[∛18]</code>
+                <code onclick="setRing('Z','sqrt',2)">Z[√2]</code>
+                <code onclick="setRing('Z','sqrt',-3)">Z[√−3]</code>
+                <code onclick="setRing('Z','sqrt',-19)">Z[√−19] (редкость!)</code>
+            </div>
+
+            <button class="btn-run" id="btn-run" onclick="run()">Проверить</button>
+        </div>
+
+        <div class="card result-card" id="result-card">
+            <h2 style="margin-bottom: 20px; color: #667eea;" id="result-name">...</h2>
+            <div id="result-body"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="color: #b0b8d0; margin-bottom: 12px;">📚 Напоминание</h3>
+            <div class="info-card">
+                <div class="label">Факториальное кольцо (УФД)</div>
+                <div class="text">Кольцо без делителей нуля, в котором каждый необратимый элемент
+                однозначно раскладывается в произведение неприводимых (с точностью до порядка и умножения на единицы).</div>
+            </div>
+            <div class="info-card">
+                <div class="label">Евклидово кольцо</div>
+                <div class="text">Кольцо R с функцией нормы Δ: R\{0} → ℕ₀ такой, что для любых a, b ≠ 0
+                существуют q, r ∈ R: a = b·q + r, причём r = 0 или Δ(r) &lt; Δ(b).
+                <span class="formula">Теорема:</span> всякое евклидово кольцо факториально. Обратное неверно.</div>
+            </div>
+            <div class="info-card">
+                <div class="label">Контрпример к факториальности в Z[√−5]</div>
+                <div class="text">6 = 2·3 = (1+√−5)(1−√−5).
+                Все четыре множителя неприводимы (проверяется через норму
+                N(a+b√−5) = a²+5b²), но разложения существенно разные — не получается
+                сопоставить множители по ассоциированности. Значит Z[√−5] не факториально.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setRing(t, f, d) {
+            document.getElementById('type').value = t;
+            document.getElementById('form').value = f;
+            document.getElementById('d').value = d;
+            run();
+        }
+
+        async function run() {
+            const payload = {
+                ring_type: document.getElementById('type').value,
+                form: document.getElementById('form').value,
+                d: document.getElementById('d').value
+            };
+
+            try {
+                const r = await fetch('/api/rings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await r.json();
+                if (data.error) { alert('Ошибка: ' + data.error); return; }
+
+                const info = data.data;
+                document.getElementById('result-name').textContent = info.name;
+
+                function verdictClass(v) {
+                    if (v === true) return 'yes';
+                    if (v === false) return 'no';
+                    return 'unknown';
+                }
+                function verdictLabel(v) {
+                    if (v === true) return 'ДА';
+                    if (v === false) return 'НЕТ';
+                    return '?';
+                }
+
+                const sourceNote = info.in_database === false ?
+                    '<div class="theory-note">⚠ Это кольцо не в «базе разобранных примеров» — ответ вычислен по общей теории (список евклидовых мнимых квадратичных из теоремы Старка-Хегнера, список евклидовых вещественных квадратичных из Чатленда, Мотцкина и др.). Рекомендую перепроверить по учебнику.</div>' : '';
+
+                document.getElementById('result-body').innerHTML = `
+                    <div class="verdict">
+                      <div class="verdict-card ${verdictClass(info.factorial)}">
+                        <div class="label">Факториальное?</div>
+                        <div class="answer">${verdictLabel(info.factorial)}</div>
+                      </div>
+                      <div class="verdict-card ${verdictClass(info.euclidean)}">
+                        <div class="label">Евклидово?</div>
+                        <div class="answer">${verdictLabel(info.euclidean)}</div>
+                      </div>
+                    </div>
+                    <div class="info-card">
+                      <div class="label">Норма (стандартная)</div>
+                      <div class="formula">${escapeHtml(info.norm)}</div>
+                    </div>
+                    <div class="info-card">
+                      <div class="label">Комментарий</div>
+                      <div class="text">${escapeHtml(info.note)}</div>
+                    </div>
+                    ${sourceNote}
+                `;
+                document.getElementById('result-card').classList.add('visible');
+            } catch (e) { alert('Ошибка: ' + e.message); }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = String(t);
+            return d.innerHTML;
+        }
+
+        // Автопрогон дефолтного примера при загрузке
+        window.addEventListener('DOMContentLoaded', run);
+    </script>
+</body>
+</html>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Теория — конспект всех лекций</title>
+    <script type="text/javascript" async
+      src="/static/mathjax/es5/tex-mml-chtml.js"></script>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+      };
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --ink: #e8eaf0;
+            --muted: #a0a8d0;
+            --accent: #667eea;
+            --accent2: #764ba2;
+            --yellow: #ffd93d;
+            --green: #a8ff78;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh; color: var(--ink);
+            font-size: 16px; line-height: 1.7;
+        }
+        .page { display: flex; max-width: 1400px; margin: 0 auto; }
+        aside {
+            width: 260px; position: sticky; top: 0; align-self: flex-start;
+            height: 100vh; overflow-y: auto; padding: 20px 15px;
+            background: rgba(0,0,0,.2); font-size: .9em;
+        }
+        aside h3 { color: var(--accent); margin-bottom: 12px; font-size: 1em; }
+        aside ul { list-style: none; padding-left: 5px; }
+        aside li { margin: 4px 0; }
+        aside a {
+            color: var(--muted); text-decoration: none;
+            display: block; padding: 4px 8px; border-radius: 5px;
+            transition: all .2s;
+        }
+        aside a:hover { background: rgba(102,126,234,.15); color: #fff; }
+        aside .active { background: rgba(102,126,234,.25); color: #fff; font-weight: 600; }
+        main { flex: 1; padding: 20px 40px; max-width: 900px; }
+        nav.top { display: flex; gap: 8px; justify-content: center;
+                  margin-bottom: 20px; flex-wrap: wrap; }
+        nav.top a {
+            padding: 7px 12px; border-radius: 7px;
+            background: rgba(102,126,234,.10); color: var(--muted);
+            text-decoration: none; font-weight: 600; font-size: .82em;
+        }
+        nav.top a.active { background: rgba(102,126,234,.25); color: #fff; }
+        h1 {
+            font-size: 2em; margin: 20px 0 10px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        h2 {
+            margin: 40px 0 15px; padding-bottom: 8px;
+            border-bottom: 2px solid rgba(102,126,234,.3);
+            color: var(--accent); font-size: 1.5em;
+        }
+        h3 { margin: 25px 0 10px; color: #b0b8d0; font-size: 1.15em; }
+        h4 { margin: 18px 0 8px; color: #c0c8e8; font-size: 1em; font-weight: 600; }
+        p, li { margin-bottom: 10px; }
+        ul, ol { padding-left: 25px; }
+        code {
+            background: rgba(255,255,255,.08); padding: 1px 6px;
+            border-radius: 4px; font-family: 'Consolas', monospace;
+            color: #c0c8e8; font-size: .92em;
+        }
+        .box {
+            padding: 14px 18px; margin: 14px 0;
+            border-radius: 0 10px 10px 0; line-height: 1.65;
+        }
+        .box-def { background: rgba(102,126,234,.08); border-left: 4px solid var(--accent); }
+        .box-def::before {
+            content: "Определение"; display: block;
+            font-size: .75em; letter-spacing: .1em; color: var(--accent);
+            text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+        }
+        .box-thm { background: rgba(255,217,61,.06); border-left: 4px solid var(--yellow); }
+        .box-thm::before {
+            content: "Теорема"; display: block;
+            font-size: .75em; letter-spacing: .1em; color: var(--yellow);
+            text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+        }
+        .box-lem { background: rgba(255,217,61,.04); border-left: 4px solid var(--yellow); }
+        .box-lem::before {
+            content: "Лемма"; display: block;
+            font-size: .75em; letter-spacing: .1em; color: var(--yellow);
+            text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+        }
+        .box-alg { background: rgba(168,255,120,.06); border-left: 4px solid var(--green); }
+        .box-alg::before {
+            content: "Алгоритм"; display: block;
+            font-size: .75em; letter-spacing: .1em; color: var(--green);
+            text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+        }
+        .box-ex { background: rgba(255,255,255,.03); border-left: 4px solid #8890a8; }
+        .box-ex::before {
+            content: "Пример"; display: block;
+            font-size: .75em; letter-spacing: .1em; color: #8890a8;
+            text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+        }
+        .box-note { background: rgba(255,165,2,.05); border-left: 4px solid #ffa502; }
+        .box-note::before {
+            content: "⚠ Важно"; display: block;
+            font-size: .75em; letter-spacing: .1em; color: #ffa502;
+            text-transform: uppercase; font-weight: 700; margin-bottom: 6px;
+        }
+        table { border-collapse: collapse; margin: 15px 0; width: 100%; }
+        table th, table td {
+            padding: 8px 12px; border: 1px solid rgba(255,255,255,.1);
+            text-align: left; font-size: .95em;
+        }
+        table th { background: rgba(102,126,234,.15); color: #fff; font-weight: 600; }
+        table td { background: rgba(255,255,255,.02); }
+        .summary {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px; margin: 20px 0;
+        }
+        .summary-item {
+            padding: 15px; background: rgba(102,126,234,.08);
+            border-radius: 10px; border: 1px solid rgba(102,126,234,.2);
+        }
+        .summary-item .title { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+        .summary-item .val {
+            font-family: 'Consolas', monospace; color: var(--green); font-size: .9em;
+        }
+        .complexity {
+            display: inline-block; padding: 2px 8px; background: rgba(168,255,120,.12);
+            color: var(--green); border-radius: 4px;
+            font-family: 'Consolas', monospace; font-size: .9em;
+        }
+        @media (max-width: 900px) {
+            .page { flex-direction: column; }
+            aside { width: 100%; height: auto; position: static; max-height: 300px; }
+            main { padding: 15px 20px; }
+        }
+        aside::-webkit-scrollbar { width: 5px; }
+        aside::-webkit-scrollbar-thumb { background: rgba(102,126,234,.4); border-radius: 3px; }
+    </style>
+</head>
+<body>
+<div class="page">
+
+<aside>
+    <h3>Навигация</h3>
+    <ul>
+        <li><a href="#l1">Л1. Теория делимости</a></li>
+        <li><a href="#l2">Л2. Факторизация (экспонента)</a></li>
+        <li><a href="#l3">Л3. Кольца</a></li>
+        <li><a href="#l4">Л4. Современная факторизация</a></li>
+        <li><a href="#l5">Л5. Дискретный логарифм</a></li>
+        <li><a href="#l6">Л6. NFS для ДЛ</a></li>
+        <li><a href="#l7">Л7. Стратегии просеивания</a></li>
+        <li><a href="#l8">Л8. Эллиптические кривые</a></li>
+        <li><a href="#cheatsheet">Шпаргалка</a></li>
+    </ul>
+</aside>
+
+<main>
+
+<nav class="top">
+    <a href="/">Факторизация</a>
+    <a href="/gcd">НОД</a>
+    <a href="/tools">Безу / CF / степень</a>
+    <a href="/dlog">Дискретный log</a>
+    <a href="/advanced">Index calc / EC</a>
+    <a href="/extra">F₂[X] / Монтгомери</a>
+    <a href="/numcalc">Свойства чисел</a>
+    <a href="/rings">Кольца</a>
+    <a class="active" href="/theory">Теория</a>
+    <a href="/notes">Конспект Л1</a>
+</nav>
+
+<h1>📖 Теоретико-числовые методы криптографии: конспект</h1>
+
+<p style="color: var(--muted); margin-bottom: 30px;">
+Собрано по лекциям курса. Ключевые определения, теоремы, алгоритмы, сложности и примеры.
+Формулы подаются через MathJax. По ссылкам в сайдбаре — переход к конкретным разделам.
+</p>
+
+<h2 id="l1">Лекция 1. Теория делимости и базовые алгоритмы</h2>
+
+<h3>Длина числа и сложность базовых операций</h3>
+
+<div class="box box-def">
+Для основания $q > 0$ любое $x \in \mathbb{N}_0$ представимо:
+$x = \sum_{i=0}^{n-1} x_i q^i$, $0 \leq x_i < q$, $x_{n-1} \neq 0$.
+<br>$L_p(x) = \lceil \log_p(x) \rceil$ — <b>длина</b> числа $x$ в $p$-ичной системе.
+</div>
+
+<table>
+    <tr><th>Операция</th><th>Сложность (битовые операции)</th></tr>
+    <tr><td>Сложение, вычитание</td><td><span class="complexity">$O(L_2(N))$</span></td></tr>
+    <tr><td>Умножение в столбик</td><td><span class="complexity">$O(L_2(N)^2)$</span></td></tr>
+    <tr><td>Умножение Карацубы</td><td><span class="complexity">$O(L_2(N)^{\log_2 3})$</span></td></tr>
+    <tr><td>Деление с остатком</td><td><span class="complexity">$O(L_2(N)^2)$</span></td></tr>
+</table>
+
+<h3>Алгоритм Евклида</h3>
+
+<div class="box box-thm">
+<b>(Ламе, 1844)</b> Число шагов алгоритма Евклида при нахождении $\mathrm{НОД}(a, b)$
+не превосходит $5 \lg \min(a, b)$.
+</div>
+
+<p><b>Идея доказательства:</b> наихудший случай — последовательность Фибоначчи
+$1, 2, 3, 5, 8, 13, \ldots$. Для $\mathrm{НОД}(a_{n+1}, a_{n+2})$ нужно ровно $n$ шагов.
+Из $a_n \geq \alpha^n$ (где $\alpha = \frac{1+\sqrt 5}{2}$) и $\alpha^5 > 10$ следует $n < 5 \log_{10} b$.</p>
+
+<div class="box box-alg">
+<b>Бинарный алгоритм Евклида.</b>
+<ol>
+<li>Пока $t > 0$:</li>
+<li>&nbsp;&nbsp;$t \leftarrow |a - b|$</li>
+<li>&nbsp;&nbsp;Пока $a \bmod 2 = 0$: $a \leftarrow a/2$</li>
+<li>&nbsp;&nbsp;Если $a \geq b$: $a \leftarrow t$, goto 1; иначе $b \leftarrow t$, goto 1.</li>
+<li>Вернуть $a$.</li>
+</ol>
+</div>
+
+<h3>Расширенный алгоритм Евклида и коэффициенты Безу</h3>
+
+<div class="box box-lem">
+Ведём тройки $(x_i, y_i, z_i)$:
+$$(x_{-1}, y_{-1}, z_{-1}) = (1, 0, a), \quad (x_0, y_0, z_0) = (0, 1, b),$$
+$$(x_i, y_i, z_i) = (x_{i-2}, y_{i-2}, z_{i-2}) - q_i (x_{i-1}, y_{i-1}, z_{i-1}),$$
+где $q_i = \lfloor z_{i-2}/z_{i-1}\rfloor$. Тогда $a x_i + b y_i = z_i$,
+а при $z_n = 0$: $z_{n-1} = \mathrm{НОД}(a,b)$, коэффициенты Безу $= (x_{n-1}, y_{n-1})$.
+</div>
+
+<h3>Непрерывные (цепные) дроби</h3>
+
+<p>Любое рациональное $\alpha = a/b$ раскладывается:
+$$\alpha = q_1 + \cfrac{1}{q_2 + \cfrac{1}{q_3 + \cfrac{1}{\ddots}}} = [q_1; q_2, q_3, \ldots, q_n],$$
+где $q_i$ — частные в алгоритме Евклида.</p>
+
+<div class="box box-def">
+<b>Подходящие дроби</b> $P_s/Q_s$:
+$$P_s = q_s P_{s-1} + P_{s-2}, \quad Q_s = q_s Q_{s-1} + Q_{s-2},$$
+$(P_{-1}, Q_{-1}) = (1, 0)$, $(P_0, Q_0) = (q_1, 1)$.
+</div>
+
+<h3>Быстрое возведение в степень (бинарный метод)</h3>
+
+<p>Для $e = \sum e_i 2^i$:
+$x^e = \prod x^{e_i \cdot 2^i}$. Сложность — не более $L_2(e)$ умножений и $L_2(e)$ возведений в квадрат.</p>
+
+<h3>Алгоритм Карацубы</h3>
+
+<p>Для $n = 2k$-битных $x, y$: $x = x_1 \cdot 2^k + x_0$, $y = y_1 \cdot 2^k + y_0$.</p>
+
+<div class="box box-def">
+$$xy = (2^{2k} + 2^k) x_1 y_1 + (x_1 - x_0)(y_1 - y_0) \cdot 2^k + (2^k + 1) x_0 y_0.$$
+3 умножения $k$-битных чисел вместо 4.
+</div>
+
+<div class="box box-thm">
+$T(2n) \leq 3T(n) + cn \implies T(n) = O(n^{\log_2 3}) \approx O(n^{1.585})$.
+</div>
+
+<h3>Умножение по Монтгомери</h3>
+
+<div class="box box-def">
+Пусть $R > N$, $\mathrm{НОД}(R, N) = 1$, $RR' - NN' = 1$, $0 < R' < N$.
+$$x \otimes y = xy R^{-1} \pmod N, \quad \varphi_R(x) = xR^{-1} \pmod N.$$
+$\varphi_R$ — изоморфизм колец $(\mathbb{Z}_N, +, \cdot)$ и $(\mathbb{Z}_N, +, \otimes)$.
+</div>
+
+<div class="box box-alg">
+<b>Редукция Монтгомери $\varphi_R(x)$:</b>
+<ol>
+<li>$m = xN' \pmod R$</li>
+<li>$t = (x + mN) / R$</li>
+<li>Если $0 \leq t < N$: вернуть $t$, иначе $t - N$.</li>
+</ol>
+Если $R = 2^k$, деление на $R$ — сдвиг битов.
+</div>
+
+<h2 id="l2">Лекция 2. Факторизация с экспоненциальной сложностью</h2>
+
+<div class="box box-def">
+<b>Задача факторизации.</b> Для составного $N$ найти $N = p_1^{\alpha_1} \cdots p_k^{\alpha_k}$.
+В RSA: $N = pq$, где $p, q$ — большие простые.
+</div>
+
+<h3>Метод Ферма</h3>
+
+<p>Если $N = pq$ нечётное, то
+$x = \frac{p+q}{2}$, $y = \frac{p-q}{2}$, $N = x^2 - y^2$.</p>
+
+<div class="box box-alg">
+Для $y = 1, 2, \ldots$: проверить, является ли $N + y^2$ полным квадратом.
+Если да — $N = (\sqrt{N+y^2} - y)(\sqrt{N+y^2} + y)$.
+</div>
+
+<p>Эффективен, когда $p$ и $q$ близки. Худший случай — <span class="complexity">$O(\sqrt N)$</span>.</p>
+
+<h3>Алгоритм $p-1$ Полларда</h3>
+
+<div class="box box-def">
+Число $N$ — <b>$B$-гладкое</b>, если все его простые делители $\leq B$.
+<br>$N$ — <b>$B$-степенно-гладкое</b>, если все его примарные делители (степени простых) $\leq B$.
+</div>
+
+<div class="box box-alg">
+<ol>
+<li>$a \xleftarrow{R} \mathbb{Z}_N^*$</li>
+<li>Выбрать границу $B$</li>
+<li>$k \leftarrow \mathrm{НОК}(1, 2, \ldots, B)$</li>
+<li>$a_k \leftarrow a^k \pmod N$</li>
+<li>$d \leftarrow \mathrm{НОД}(a_k - 1, N)$</li>
+<li>Если $1 < d < N$: вернуть $[d, N/d]$, иначе повторить.</li>
+</ol>
+</div>
+
+<p><b>Идея:</b> если $p | N$ и $p-1$ — $B$-гладкое, то $a^{p-1} \equiv 1 \pmod p$
+(малая теорема Ферма), значит $p | a^k - 1$ для $k = \mathrm{НОК}(1, \ldots, B)$.</p>
+
+<p>Сложность: <span class="complexity">$O(\sqrt N \log^c N)$</span>.</p>
+
+<h3>$\rho$-алгоритм Полларда</h3>
+
+<p>Итерация $x_i = f(x_{i-1})$ с $f(x) = x^2 + c \pmod N$. Ищут коллизию $x_i \equiv x_j \pmod p$.</p>
+
+<div class="box box-thm">
+Пусть $p | N$, $p \leq \sqrt N$. Если $f$ статистически «похож» на случайное отображение,
+$\rho$-метод находит $p$ за <span class="complexity">$O(\sqrt[4]{N} \log^3 N)$</span>.
+</div>
+
+<p><b>Идея парадокса дней рождения:</b> в случайной последовательности длины $O(\sqrt p)$
+ожидаема коллизия mod $p$. Находят алгоритмом Флойда (черепаха и заяц):
+$\mathrm{НОД}(x_i - x_{2i}, N)$.</p>
+
+<div class="box box-ex">
+$N = 1359331$, $f(x) = x^2 + 5$, $x_0 = 1$. Через 8 итераций:
+$\mathrm{НОД}(x_7 - x_{14}, N) = 1181$, $N = 1181 \cdot 1151$.
+</div>
+
+<h2 id="l3">Лекция 3. Кольца: факториальные и евклидовы</h2>
+
+<div class="box box-def">
+<b>Кольцо</b> $(R, +, \cdot)$: $(R, +)$ — абелева группа, выполнена дистрибутивность.
+<br><b>Идеал</b> $I \trianglelefteq R$ — подкольцо, замкнутое относительно умножения на $R$.
+</div>
+
+<div class="box box-def">
+<b>Простой идеал:</b> $ab \in I \Rightarrow a \in I$ или $b \in I$.
+<br><b>Максимальный идеал:</b> не содержится ни в каком идеале, кроме $R$.
+</div>
+
+<h3>Факториальные кольца (UFD)</h3>
+
+<div class="box box-def">
+<b>Факториальное кольцо</b> — целостное кольцо, в котором каждый ненулевой необратимый элемент
+однозначно (с точностью до ассоциированности и порядка) раскладывается в произведение неприводимых.
+</div>
+
+<h3>Евклидовы кольца</h3>
+
+<div class="box box-def">
+<b>Евклидово кольцо</b> $R$ — целостное кольцо с функцией нормы $\Delta: R \setminus \{0\} \to \mathbb{N}_0$:
+<ol>
+<li>$\Delta(ab) \geq \Delta(a)$ для $a, b \neq 0$,</li>
+<li>Для любых $a, b \neq 0$ существуют $q, r$: $a = bq + r$, $r = 0$ или $\Delta(r) < \Delta(b)$.</li>
+</ol>
+</div>
+
+<div class="box box-thm">
+Всякое евклидово кольцо — <b>факториальное</b>. Обратное неверно.
+</div>
+
+<p><b>Примеры:</b> $\mathbb{Z}$ — евклидово ($\Delta = |\cdot|$); $K[X]$ — евклидово ($\Delta = \deg$);
+$\mathbb{Z}[i]$ — евклидово ($\Delta(a+bi) = a^2 + b^2$).</p>
+
+<div class="box box-note">
+Классический контрпример к факториальности в $\mathbb{Z}[\sqrt{-5}]$:
+$$6 = 2 \cdot 3 = (1+\sqrt{-5})(1-\sqrt{-5}).$$
+Все четыре множителя неприводимы (через норму $N(a+b\sqrt{-5}) = a^2 + 5b^2$).
+Значит $\mathbb{Z}[\sqrt{-5}]$ не факториально.
+</div>
+
+<p>Подробный справочник с контрпримерами — на <a href="/rings" style="color: var(--green);">/rings</a>.</p>
+
+<h2 id="l4">Лекция 4. Современные алгоритмы факторизации</h2>
+
+<h3>Факторизация Ленстры (ECM, Elliptic Curve Method)</h3>
+
+<p>Аналог $p-1$ Полларда, но вместо $\mathbb{Z}_p^*$ используется группа точек $E(\mathbb{F}_p)$.</p>
+
+<div class="box box-alg">
+<ol>
+<li>Выбрать точку $P(x_0, y_0)$ и параметр $a$.</li>
+<li>$b = y_0^2 - x_0^3 - a x_0 \pmod N$. Кривая: $Y^2 = X^3 + aX + b$.</li>
+<li>$k = \mathrm{НОК}(1, \ldots, B)$. Вычислить $kP$ через сложение точек.</li>
+<li>Если встретится необратимый знаменатель mod $N$ —
+$\mathrm{НОД}(\text{знаменатель}, N)$ — нетривиальный делитель.</li>
+</ol>
+</div>
+
+<div class="box box-ex">
+$N = 187$, $B = 100$, $P = (0, 5)$, $a = 1 \Rightarrow b = 25$. При вычислении $6P$:
+$\lambda = \frac{3 \cdot 124^2 + 1}{2 \cdot 176} = \frac{127}{165}$,
+$\mathrm{НОД}(165, 187) = 11$, откуда $187 = 11 \cdot 17$.
+</div>
+
+<p>Сложность: <span class="complexity">$L_p[1/2, \sqrt 2]$</span>.
+Где $L_N[\alpha, c] = \exp(c (\log N)^\alpha (\log \log N)^{1-\alpha})$.</p>
+
+<h3>Квадратичное решето (QS)</h3>
+
+<p><b>Идея:</b> найти $x, y$: $x^2 \equiv y^2 \pmod N$, $x \not\equiv \pm y$. Тогда $\mathrm{НОД}(x - y, N)$ — нетривиальный делитель.</p>
+
+<p>Рассматривают $Q(X) = (X + \lceil\sqrt N\rceil)^2 - N$. Значения $Q(X)$ — квадраты mod $N$.
+Собирают $B$-гладкие значения и через линейную алгебру $\mathbb{F}_2$ находят подмножество,
+произведение которых — полный квадрат.</p>
+
+<div class="box box-ex">
+$N = 1829$, $B = 13$. $\mathcal{FB} = \{-1, 2, 5, 7, 11, 13\}$, $\lceil\sqrt{1829}\rceil = 43$.
+Находим: $(94 \cdot 127)^2 \equiv (2 \cdot 5 \cdot 7 \cdot 11 \cdot 13)^2$,
+$\mathrm{НОД}(138 \pm 1750, 1829) = \{31, 59\}$. $1829 = 31 \cdot 59$.
+</div>
+
+<p>Сложность: <span class="complexity">$L_N[1/2, 1]$</span>. Лучшее применение — RSA-129 (1994).
+Для $N > 10^{110}$ уступает NFS.</p>
+
+<h3>Решето числового поля (NFS)</h3>
+
+<p>Преемник QS, использует алгебраическую теорию чисел:</p>
+<ol>
+<li>Выбирают неприводимый $f(X) \in \mathbb{Z}[X]$ степени $d$ и $m$: $f(m) \equiv 0 \pmod N$.</li>
+<li>$\alpha$ — корень $f$. Работают в $\mathbb{Z}[\alpha]$: есть гомоморфизм $\varphi: \mathbb{Z}[\alpha] \to \mathbb{Z}_N$, $\varphi(\alpha) = m$.</li>
+<li>Ищут пары $(a, b)$: $a + bm$ и $a + b\alpha$ одновременно гладкие.</li>
+<li>Через линейную алгебру находят произведения-квадраты с обеих сторон.</li>
+<li>$x^2 \equiv y^2 \pmod N \Rightarrow \mathrm{НОД}(x - y, N)$.</li>
+</ol>
+
+<p>Сложность: <span class="complexity">$L_N[1/3, c]$</span>. Последний рекорд: RSA-250 (829 бит).</p>
+
+<h2 id="l5">Лекция 5. Дискретный логарифм</h2>
+
+<div class="box box-def">
+<b>Задача ДЛ.</b> В группе $G = \langle g \rangle$ порядка $n$: дано $y = g^x$, найти $x = \log_g y$.
+</div>
+
+<p><b>Простой перебор:</b> $O(n)$ операций, $O(1)$ памяти.</p>
+
+<h3>Алгоритм Гельфонда-Шэнкса (BSGS)</h3>
+
+<div class="box box-alg">
+<ol>
+<li>$s = \lceil \sqrt n \rceil$</li>
+<li><b>Малый шаг:</b> $S = \{(y g^r, r) : r = 0, \ldots, s-1\}$</li>
+<li><b>Большой шаг:</b> $T = \{(g^{ts}, ts) : t = 0, \ldots, s\}$</li>
+<li>Найти $y g^r = g^{ts} \Rightarrow x = ts - r$.</li>
+</ol>
+</div>
+
+<div class="box box-thm">
+Сложность: <span class="complexity">$O(\sqrt n \log n)$</span> операций, $O(\sqrt n)$ памяти.
+</div>
+
+<div class="box box-ex">
+$G = \mathbb{F}_{31}^*$, $g = 3$, $y = 24$, $n = 30$, $s = 6$.
+<br>$S = \{(24,0), (10,1), (30,2), (28,3), (22,4), (4,5)\}$,
+$T = \{(1,0), (16,6), (8,12), (4,18), (2,24), (1,30), (16,36)\}$.
+<br>Совпадение $(4, \cdot)$: $x = 18 - 5 = 13$.
+</div>
+
+<h3>$\rho$-алгоритм Полларда для ДЛ</h3>
+
+<p>Разбиение $G = A \cup B \cup C$ по $z \bmod 3$. Функция:
+$$f(z) = \begin{cases} yz, & z \in A \\ z^2, & z \in B \\ gz, & z \in C \end{cases}$$</p>
+
+<p>Инвариант $z_i = g^{\alpha_i} y^{\beta_i}$. При коллизии $z_i = z_{2i}$:
+$$x = \frac{\alpha_{2i} - \alpha_i}{\beta_i - \beta_{2i}} \pmod n.$$</p>
+
+<div class="box box-thm">
+Сложность: <span class="complexity">$O(\sqrt n)$</span> операций, <b>$O(1)$ памяти</b> (преимущество перед BSGS).
+</div>
+
+<h3>Алгоритм Полига-Хеллмана</h3>
+
+<p>Эффективен, когда $n = p-1 = \prod p_i^{\alpha_i}$ — $B$-гладкое.</p>
+
+<div class="box box-alg">
+<ol>
+<li>Для каждого $p_i$: таблица $r_{p_i, j} = g^{j(p-1)/p_i} \pmod p$, $j = 0, \ldots, p_i - 1$.</li>
+<li>Для каждой силы $p_i^{\alpha_i}$: найти $x \bmod p_i^{\alpha_i}$, определяя цифры $x_0, x_1, \ldots$ в $p_i$-ичной записи.</li>
+<li>Собрать $x$ по Китайской теореме об остатках.</li>
+</ol>
+</div>
+
+<div class="box box-ex">
+$2^x \equiv 62 \pmod{181}$. $q = 180 = 2^2 \cdot 3^2 \cdot 5$.
+<br>Система $x \equiv 0 \pmod 4$, $x \equiv 1 \pmod 9$, $x \equiv 0 \pmod 5$ даёт $x = 100$.
+</div>
+
+<h3>Index Calculus (алгоритм Адлемана)</h3>
+
+<div class="box box-alg">
+<ol>
+<li><b>Факторная база</b> $\mathcal{FB} = \{q_1, \ldots, q_k\}$ — малые простые $\leq B$.</li>
+<li><b>Этап 1:</b> случайные $k_j$, ищем пока $g^{k_j} \bmod p$ раскладывается по $\mathcal{FB}$.
+Получаем уравнения $k_j \equiv \sum a_{j,i} \log_g q_i \pmod{p-1}$.</li>
+<li><b>Этап 2:</b> решив СЛАУ, находим $\log_g q_i$ для всех $q_i$.</li>
+<li><b>Этап 3:</b> ищем $r$: $y g^r \bmod p$ раскладывается. Тогда $\log_g y = \sum \beta_i \log_g q_i - r$.</li>
+</ol>
+</div>
+
+<p>Сложность: <span class="complexity">$L_p[1/2, c]$</span>. Метод COS (Коперсмит-Одлыжко-Шреппель) — оптимизированная версия.</p>
+
+<h2 id="l6">Лекция 6. NFS для дискретного логарифма</h2>
+
+<p>NFS для ДЛ в $\mathbb{F}_p$ — аналог NFS для факторизации, но сложнее.</p>
+
+<div class="box box-def">
+$\alpha$ — <b>алгебраическое</b> над $K$, если $\exists f \in K[X] \setminus \{0\}$: $f(\alpha) = 0$.
+$L = K(\alpha)$ — алгебраическое расширение, $[L:K]$ — степень.
+<br><b>Кольцо целых</b> $\mathcal{O}_L$ — множество $\alpha \in L$, являющихся корнями нормированных многочленов из $\mathbb{Z}[X]$.
+</div>
+
+<div class="box box-thm">
+Для числового поля $\mathbb{A}$ степени $n$:
+<ul>
+<li>Любой главный идеал в $\mathcal{O}_\mathbb{A}$ имеет вид $\alpha \mathcal{O}_\mathbb{A}$.</li>
+<li>Существует однозначное разложение идеала на простые идеалы.</li>
+</ul>
+</div>
+
+<p>Вводят логарифмическую функцию
+$\lambda(\gamma) = \gamma^k - 1 \pmod{r^2 \mathcal{O}_\mathbb{A}}$,
+являющуюся гомоморфизмом в аддитивную группу $r\mathcal{O}_\mathbb{A}/r^2\mathcal{O}_\mathbb{A}$.
+Собирают соотношения, проецируют в $\mathbb{F}_p$, решают СЛАУ как в index calculus.</p>
+
+<p>Сложность: <span class="complexity">$L_p[1/3, c]$</span>.</p>
+
+<div class="box box-note">
+NFS — глубоко теоретический алгоритм. На зачёте достаточно: понимать идею
+(работа в кольце целых алгебраических чисел), знать сложность $L_p[1/3, c]$,
+понимать применимость (очень большие $p$, $> 10^{100}$).
+</div>
+
+<h2 id="l7">Лекция 7. Стратегии просеивания</h2>
+
+<p>Главные задачи при реализации NFS:</p>
+<ul>
+<li><b>Определение факторных баз</b> (рациональной и алгебраической).</li>
+<li><b>Набор гладких соотношений</b> — просеивание (самая затратная часть).</li>
+<li><b>Решение СЛАУ</b> — миллионы уравнений, методы Block Lanczos / Block Wiedemann.</li>
+</ul>
+
+<h3>Линейное просеивание</h3>
+
+<p>Ищут пары $(c, d)$ такие, что идеал $(c + d\alpha)$ — гладкий, т.е. раскладывается в произведение
+степеней простых идеалов. Условие эквивалентно: $N(c + d\alpha)$ — $B_2$-гладкое число.</p>
+
+<h3>Подбор многочленов</h3>
+
+<p>Для NFS нужен $f(X)$ степени 3–6 с хорошими статистическими свойствами:
+малые коэффициенты, много вещественных корней. Методы: base-m expansion, Монтгомери-Мёрфи.</p>
+
+<h2 id="l8">Лекция 8. Эллиптические кривые</h2>
+
+<h3>Определение</h3>
+
+<div class="box box-def">
+<b>Эллиптическая кривая</b> над полем $\mathbb{F}$ — неособая кривая 3-го порядка с хотя бы одной точкой.
+В форме Вейерштрасса:
+$$Y^2 + a_1 XY + a_3 Y = X^3 + a_2 X^2 + a_4 X + a_6.$$
+Для $\mathrm{char}(\mathbb{F}) \neq 2, 3$: сводится к $Y^2 = X^3 + aX + b$.
+</div>
+
+<div class="box box-def">
+<b>Неособость:</b> дискриминант $\Delta = -16(4a^3 + 27b^2) \neq 0$.
+<br><b>$j$-инвариант:</b> $j(E) = 1728 \cdot \frac{4a^3}{4a^3 + 27b^2}$.
+Особые случаи: $j = 0 \Leftrightarrow Y^2 = X^3 + b$; $j = 1728 \Leftrightarrow Y^2 = X^3 + aX$.
+</div>
+
+<h3>Сложение точек</h3>
+
+<div class="box box-def">
+$P + Q = R = (x_3, y_3)$:
+<ul>
+<li><b>$P \neq \pm Q$:</b> $\lambda = \frac{y_2 - y_1}{x_2 - x_1}$, $x_3 = \lambda^2 - x_1 - x_2$, $y_3 = \lambda(x_1 - x_3) - y_1$.</li>
+<li><b>$P = Q$ (удвоение):</b> $\lambda = \frac{3x_1^2 + a}{2y_1}$, $x_3 = \lambda^2 - 2x_1$, $y_3 = \lambda(x_1 - x_3) - y_1$.</li>
+<li><b>$P = -Q$:</b> $P + Q = \mathcal{O}$.</li>
+</ul>
+</div>
+
+<div class="box box-thm">
+$E(\mathbb{F}_q)$ с операцией сложения — <b>абелева группа</b>. Нейтральный — $\mathcal{O}$ (бесконечно удалённая точка).
+</div>
+
+<h3>Теорема Хассе</h3>
+
+<div class="box box-thm">
+Для $E(\mathbb{F}_q)$, где $q = p^n$:
+$$|E(\mathbb{F}_q)| = q + 1 - t, \quad |t| \leq 2\sqrt q.$$
+$t$ — <b>след Фробениуса</b>.
+</div>
+
+<h3>Алгоритм Шуфа</h3>
+
+<p>Вычисляет $|E(\mathbb{F}_q)|$ за полиномиальное время. Идея: считать $t \bmod \ell$ для малых простых $\ell$,
+восстановить $t$ по КТО. Использует деление многочленов и уравнение Фробениуса.</p>
+
+<p>Сложность: <span class="complexity">$O(\log^8 q)$</span>. Ключевой алгоритм для генерации ECC-кривых.</p>
+
+<h3>ECDLP</h3>
+
+<div class="box box-def">
+<b>ECDLP:</b> для $P, Q \in E(\mathbb{F}_q)$, где $Q = kP$, найти $k$.
+</div>
+
+<p>Лучший классический метод — $\rho$-Полларда или BSGS: <span class="complexity">$O(\sqrt n)$</span>.
+<b>Субэкспоненциальных</b> методов для общих EC не существует — отсюда криптографическая эффективность ECC.</p>
+
+<h4>Эквиваленты по защите:</h4>
+<table>
+<tr><th>Уровень</th><th>RSA/DH</th><th>ECC</th></tr>
+<tr><td>80 бит</td><td>1024</td><td>160</td></tr>
+<tr><td>112 бит</td><td>2048</td><td>224</td></tr>
+<tr><td>128 бит</td><td>3072</td><td>256</td></tr>
+<tr><td>192 бит</td><td>7680</td><td>384</td></tr>
+<tr><td>256 бит</td><td>15360</td><td>512</td></tr>
+</table>
+
+<h3>Протоколы на EC</h3>
+
+<ul>
+<li><b>ECDH</b> (Elliptic Curve Diffie-Hellman) — обмен ключами.</li>
+<li><b>ECDSA</b> — цифровая подпись.</li>
+<li><b>ГОСТ 34.10-2018</b> — российский стандарт ЭП на ЭК.</li>
+</ul>
+
+<h3>Квантовая атака и постквантовая криптография</h3>
+
+<p><b>Алгоритм Шора</b> решает и факторизацию, и DLP (включая ECDLP) за <b>полиномиальное квантовое время</b>.
+Все классические асимметричные криптосистемы — под угрозой в пост-квантовом мире.</p>
+
+<p><b>SIDH</b> (Supersingular Isogeny DH) — на изогениях суперсингулярных EC.
+<b>Взломан в 2022</b> (Castryck-Decru) — не используется.</p>
+
+<p><b>CSI-FiSh</b> — подпись на изогениях обычных кривых. Активно изучается.</p>
+
+<h2 id="cheatsheet">Шпаргалка: сложности и применимость</h2>
+
+<h3>Факторизация</h3>
+<table>
+<tr><th>Метод</th><th>Сложность</th><th>Хорош когда</th></tr>
+<tr><td>Перебор</td><td>$O(\sqrt N)$</td><td>$N$ маленькое</td></tr>
+<tr><td>Ферма</td><td>$O(\sqrt N)$</td><td>$p, q$ близки</td></tr>
+<tr><td>$p-1$ Полларда</td><td>$O(B \log N)$</td><td>$p-1$ гладкое</td></tr>
+<tr><td>$\rho$-Полларда</td><td>$O(N^{1/4})$</td><td>общий случай, малая память</td></tr>
+<tr><td>ECM (Ленстра)</td><td>$L_p[1/2, \sqrt 2]$</td><td>маленькие $p \ll N$</td></tr>
+<tr><td>QS</td><td>$L_N[1/2, 1]$</td><td>$N < 10^{110}$</td></tr>
+<tr><td>NFS</td><td>$L_N[1/3, c]$</td><td>$N > 10^{100}$</td></tr>
+</table>
+
+<h3>Дискретный логарифм в $\mathbb{F}_p^*$</h3>
+<table>
+<tr><th>Метод</th><th>Сложность</th><th>Память</th></tr>
+<tr><td>Перебор</td><td>$O(n)$</td><td>$O(1)$</td></tr>
+<tr><td>BSGS</td><td>$O(\sqrt n \log n)$</td><td>$O(\sqrt n)$</td></tr>
+<tr><td>$\rho$-Полларда</td><td>$O(\sqrt n)$</td><td>$O(1)$</td></tr>
+<tr><td>Полиг-Хеллман</td><td>$\sum \alpha_i(\log p + p_i)$</td><td>$O(\sum p_i)$</td></tr>
+<tr><td>Index Calculus</td><td>$L_p[1/2, c]$</td><td>$L_p[1/2, c]$</td></tr>
+<tr><td>NFS-DL</td><td>$L_p[1/3, c]$</td><td>$L_p[1/3, c]$</td></tr>
+</table>
+
+<h3>Классы сложности</h3>
+<p>$L_N[\alpha, c] = \exp\left(c (\log N)^\alpha (\log \log N)^{1-\alpha}\right)$:</p>
+<ul>
+<li>$\alpha = 0$: полиномиальная $(\log N)^c$</li>
+<li>$\alpha = 1$: экспоненциальная $N^c$</li>
+<li>$0 < \alpha < 1$: <b>субэкспоненциальная</b></li>
+</ul>
+
+<h3>Часто спрашиваемые факты</h3>
+
+<div class="summary">
+  <div class="summary-item">
+    <div class="title">φ(n)</div>
+    <div class="val">мультипликативная, $\varphi(p^k) = p^k - p^{k-1}$</div>
+  </div>
+  <div class="summary-item">
+    <div class="title">Малая Ферма</div>
+    <div class="val">$a^{p-1} \equiv 1 \pmod p$, $\gcd(a,p)=1$</div>
+  </div>
+  <div class="summary-item">
+    <div class="title">Эйлер</div>
+    <div class="val">$a^{\varphi(n)} \equiv 1 \pmod n$, $\gcd(a,n)=1$</div>
+  </div>
+  <div class="summary-item">
+    <div class="title">Критерий Эйлера</div>
+    <div class="val">$(a/p) \equiv a^{(p-1)/2} \pmod p$</div>
+  </div>
+  <div class="summary-item">
+    <div class="title">Хассе</div>
+    <div class="val">$|E(\mathbb{F}_q)| = q+1-t$, $|t| \leq 2\sqrt q$</div>
+  </div>
+  <div class="summary-item">
+    <div class="title">Ламе</div>
+    <div class="val">Евклид: $\leq 5 \lg \min(a,b)$ шагов</div>
+  </div>
+</div>
+
+<p style="text-align: center; margin: 50px 0 30px; color: var(--muted);">
+📚 Для практики — инструменты по ссылкам в шапке.<br>
+По кольцам — <a href="/rings" style="color: var(--green);">/rings</a>,
+по свойствам чисел — <a href="/numcalc" style="color: var(--green);">/numcalc</a>.
+</p>
+
+</main>
+</div>
+
+<script>
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const navLinks = document.querySelectorAll('aside a');
+window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < 100) current = section.id;
+    });
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+});
+</script>
+
+</body>
+</html>

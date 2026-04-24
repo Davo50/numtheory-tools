@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Свойства чисел</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+               background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+               min-height: 100vh; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 2.2em; margin-bottom: 30px;
+             background: linear-gradient(90deg, #667eea, #764ba2);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+                border-radius: 16px; padding: 30px; margin-bottom: 20px; backdrop-filter: blur(10px); }
+        .method-selector { display: grid;
+                          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                          gap: 10px; margin-bottom: 25px; }
+        .method-btn { padding: 12px 16px; border: 2px solid rgba(102,126,234,.3);
+                     border-radius: 10px; background: rgba(102,126,234,.1);
+                     color: #a0a8d0; cursor: pointer; font-size: .9em;
+                     font-weight: 600; transition: all .3s; text-align: center; }
+        .method-btn:hover { border-color: #667eea; background: rgba(102,126,234,.2); color: #fff; }
+        .method-btn.active { border-color: #667eea;
+                            background: linear-gradient(135deg, #667eea, #764ba2);
+                            color: #fff; box-shadow: 0 4px 15px rgba(102,126,234,.4); }
+        .method-description { padding: 12px 16px; background: rgba(0,0,0,.2);
+                              border-radius: 10px; margin-bottom: 20px;
+                              font-size: .9em; color: #b0b8d0; line-height: 1.6; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px;
+                            color: #b0b8d0; font-size: .9em; font-weight: 500; }
+        .form-group input { width: 100%; padding: 10px 14px;
+                            border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+                            background: rgba(255,255,255,.05); color: #fff;
+                            font-size: 1em; font-family: 'Consolas', monospace; }
+        .form-group input:focus { outline: none; border-color: #667eea;
+                                  box-shadow: 0 0 10px rgba(102,126,234,.2); }
+        .params-row { display: grid;
+                     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                     gap: 15px; }
+        .section { display: none; } .section.visible { display: block; }
+        .btn-run { width: 100%; padding: 14px; border: none; border-radius: 10px;
+                  background: linear-gradient(135deg, #667eea, #764ba2);
+                  color: #fff; font-size: 1.1em; font-weight: 700; cursor: pointer;
+                  transition: all .3s; margin-top: 10px; }
+        .btn-run:hover { transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(102,126,234,.5); }
+        .result-card { display: none; } .result-card.visible { display: block; }
+        .prop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                     gap: 12px; margin-bottom: 20px; }
+        .prop-card { padding: 12px 15px; background: rgba(102,126,234,.1);
+                     border-left: 3px solid #667eea; border-radius: 0 8px 8px 0; }
+        .prop-card .label { font-size: .75em; text-transform: uppercase;
+                           letter-spacing: .05em; color: #8890a8; margin-bottom: 4px; }
+        .prop-card .value { font-size: 1.2em; font-weight: 700;
+                           color: #a8ff78; font-family: 'Consolas', monospace;
+                           word-break: break-word; }
+        .prop-card .value.neutral { color: #c0c8e8; }
+        .prop-card .sub { font-size: .8em; color: #b0b8d0; margin-top: 6px; }
+        .steps-container { max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        .step { padding: 10px 14px; margin-bottom: 6px;
+               background: rgba(255,255,255,.03); border-left: 3px solid #667eea;
+               border-radius: 0 8px 8px 0;
+               font-family: 'Consolas', monospace; font-size: .85em;
+               line-height: 1.5; word-break: break-word; }
+        .step .step-num { display: inline-block; min-width: 60px;
+                         color: #7a82a0; font-weight: 600; }
+        .step.result-step { border-left-color: #a8ff78; background: rgba(168,255,120,.08); }
+        .step.init-step { border-left-color: #ffd93d; background: rgba(255,217,61,.06); }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.visible { display: block; }
+        .spinner { width: 40px; height: 40px;
+                  border: 3px solid rgba(102,126,234,.2); border-top-color: #667eea;
+                  border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .examples-block { margin-top: 10px; padding: 10px;
+                         background: rgba(0,0,0,.15); border-radius: 8px;
+                         font-size: .85em; color: #8890a8; }
+        .examples-block code { cursor: pointer; background: rgba(102,126,234,.15);
+                              padding: 3px 8px; border-radius: 5px; margin: 3px;
+                              display: inline-block; color: #c0c8e8; }
+        .examples-block code:hover { background: rgba(102,126,234,.3); color: #fff; }
+        .smooth-table { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                       gap: 8px; margin-top: 10px; }
+        .smooth-cell { padding: 8px; background: rgba(0,0,0,.2); border-radius: 6px;
+                      text-align: center; font-size: .85em; }
+        .smooth-cell.yes { background: rgba(168,255,120,.15); color: #a8ff78; }
+        .smooth-cell.no { background: rgba(255,107,107,.1); color: #ffb0b0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">F₂[X] / Монтгомери</a>
+          <a href="/numcalc" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">Свойства чисел</a>
+          <a href="/rings" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Кольца</a>
+          <a href="/theory" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Теория</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🔢 Калькулятор числовых свойств</h1>
+
+        <div class="card">
+            <div class="method-selector">
+                <button class="method-btn active" onclick="selectMode('properties', this)">Свойства n</button>
+                <button class="method-btn" onclick="selectMode('order', this)">Порядок ord_n(a)</button>
+                <button class="method-btn" onclick="selectMode('legendre', this)">Символ Лежандра (a/p)</button>
+                <button class="method-btn" onclick="selectMode('jacobi', this)">Символ Якоби (a/n)</button>
+                <button class="method-btn" onclick="selectMode('smooth', this)">B-гладкость</button>
+            </div>
+
+            <div id="desc-properties" class="method-description">
+                Выдаёт всё сразу про число n: разложение, φ(n) и λ(n), число и список делителей,
+                первообразные корни (если n простое), B-гладкость.
+            </div>
+            <div id="desc-order" class="method-description" style="display:none;">
+                Порядок элемента a по модулю n — наименьшее k, при котором a^k ≡ 1 (mod n).
+                Работает, когда НОД(a, n) = 1. Перебираем делители λ(n) в порядке возрастания.
+            </div>
+            <div id="desc-legendre" class="method-description" style="display:none;">
+                Символ Лежандра (a/p) для простого p: +1 если a — квадратичный вычет,
+                −1 если невычет, 0 если p | a. Вычисляется по критерию Эйлера: a^((p−1)/2) mod p.
+                Если вычет — найдём корни через Тонелли-Шенкса.
+            </div>
+            <div id="desc-jacobi" class="method-description" style="display:none;">
+                Символ Якоби (a/n) для нечётного n — обобщение символа Лежандра. Если −1,
+                значит a — точно квадратичный невычет по mod n. Если +1 — может быть или нет.
+            </div>
+            <div id="desc-smooth" class="method-description" style="display:none;">
+                Число называется B-гладким, если все его простые делители ≤ B. Используется
+                в алгоритмах p−1 Полларда, Index Calculus, квадратичного решета.
+            </div>
+
+            <!-- Форма: только n -->
+            <div id="form-single" class="section visible">
+                <div class="form-group">
+                    <label for="input-n">n:</label>
+                    <input type="number" id="input-n" value="180">
+                </div>
+                <div class="examples-block">
+                    <code onclick="setN(180)">180 (составное)</code>
+                    <code onclick="setN(181)">181 (простое)</code>
+                    <code onclick="setN(229)">229 (пример Index Calc)</code>
+                    <code onclick="setN(1359331)">1359331 (пример факторизации)</code>
+                </div>
+            </div>
+
+            <!-- Форма: a и n -->
+            <div id="form-pair" class="section">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-a">a:</label>
+                        <input type="number" id="input-a" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label id="label-n2" for="input-n2">n:</label>
+                        <input type="number" id="input-n2" value="181">
+                    </div>
+                </div>
+                <div class="examples-block" id="examples-pair">
+                    <code onclick="setPair(2,181)">a=2, n=181</code>
+                    <code onclick="setPair(6,229)">a=6, n=229</code>
+                    <code onclick="setPair(3,31)">a=3, n=31</code>
+                </div>
+            </div>
+
+            <!-- Форма: n и B -->
+            <div id="form-smooth" class="section">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-smooth-n">n:</label>
+                        <input type="number" id="input-smooth-n" value="7350">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-smooth-B">B:</label>
+                        <input type="number" id="input-smooth-B" value="11">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-run" id="btn-run" onclick="run()">Посчитать</button>
+        </div>
+
+        <div class="loading" id="loading"><div class="spinner"></div><p>Вычисление...</p></div>
+
+        <div class="card result-card" id="result-card">
+            <h2 style="margin-bottom: 20px; color: #667eea;">📊 Результат</h2>
+            <div id="result-body"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'properties';
+
+        function selectMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.method-description').forEach(d => d.style.display = 'none');
+            document.getElementById('desc-' + mode).style.display = 'block';
+
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+            if (mode === 'properties') {
+                document.getElementById('form-single').classList.add('visible');
+            } else if (mode === 'smooth') {
+                document.getElementById('form-smooth').classList.add('visible');
+            } else {
+                document.getElementById('form-pair').classList.add('visible');
+                const lbl = document.getElementById('label-n2');
+                lbl.textContent = (mode === 'legendre') ? 'p (простое):' : 'n:';
+            }
+        }
+
+        function setN(n) { document.getElementById('input-n').value = n; }
+        function setPair(a, n) {
+            document.getElementById('input-a').value = a;
+            document.getElementById('input-n2').value = n;
+        }
+
+        async function run() {
+            const payload = { what: currentMode };
+            if (currentMode === 'properties') {
+                payload.n = document.getElementById('input-n').value;
+            } else if (currentMode === 'smooth') {
+                payload.n = document.getElementById('input-smooth-n').value;
+                payload.B = document.getElementById('input-smooth-B').value;
+            } else if (currentMode === 'legendre') {
+                payload.a = document.getElementById('input-a').value;
+                payload.p = document.getElementById('input-n2').value;
+            } else {
+                payload.a = document.getElementById('input-a').value;
+                payload.n = document.getElementById('input-n2').value;
+            }
+
+            const btn = document.getElementById('btn-run');
+            const loading = document.getElementById('loading');
+            const card = document.getElementById('result-card');
+            btn.disabled = true; loading.classList.add('visible'); card.classList.remove('visible');
+
+            try {
+                const r = await fetch('/api/numcalc', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await r.json();
+                if (data.error) { alert('Ошибка: ' + data.error); return; }
+                renderResult(currentMode, data.data);
+                card.classList.add('visible');
+            } catch (e) { alert('Ошибка: ' + e.message); }
+            finally { btn.disabled = false; loading.classList.remove('visible'); }
+        }
+
+        function renderResult(mode, d) {
+            const body = document.getElementById('result-body');
+
+            if (mode === 'properties') {
+                const divs = Array.isArray(d.divisors) ? d.divisors.join(', ') : '—';
+                const primRoots = d.primitive_roots ?
+                    `первые ${d.primitive_roots.length}: ${d.primitive_roots.join(', ')}` :
+                    '—';
+                const smoothRows = Object.entries(d.smoothness)
+                    .map(([B, ok]) => `<div class="smooth-cell ${ok?'yes':'no'}">B=${B}: ${ok?'да':'нет'}</div>`)
+                    .join('');
+                body.innerHTML = `
+                    <div class="prop-grid">
+                      <div class="prop-card">
+                        <div class="label">n</div>
+                        <div class="value">${d.n} ${d.is_prime ? '(простое)' : '(составное)'}</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">Факторизация</div>
+                        <div class="value">${escapeHtml(d.factorization_str)}</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">φ(n) — функция Эйлера</div>
+                        <div class="value">${d.phi}</div>
+                        <div class="sub">количество чисел от 1 до n, взаимно простых с n</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">λ(n) — функция Кармайкла</div>
+                        <div class="value">${d.lambda_carmichael}</div>
+                        <div class="sub">макс. порядок элемента по mod n; порядок любого a делит λ(n)</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">Делителей</div>
+                        <div class="value">${d.num_divisors}</div>
+                        <div class="sub">${escapeHtml(divs)}</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">Наибольший простой делитель</div>
+                        <div class="value">${d.largest_prime_factor}</div>
+                      </div>
+                      ${d.primitive_roots ? `
+                      <div class="prop-card" style="grid-column: 1 / -1;">
+                        <div class="label">Первообразные корни (mod ${d.n})</div>
+                        <div class="value neutral">${escapeHtml(primRoots)}</div>
+                      </div>` : ''}
+                    </div>
+                    <h3 style="margin: 15px 0 8px; color: #b0b8d0;">B-гладкость при разных B:</h3>
+                    <div class="smooth-table">${smoothRows}</div>
+                `;
+            } else if (mode === 'order') {
+                const ord = d.order;
+                body.innerHTML = `
+                    <div class="prop-card" style="margin-bottom: 20px;">
+                      <div class="label">Порядок ord_n(a)</div>
+                      <div class="value">${ord !== null ? ord : 'не определён'}</div>
+                    </div>
+                    <h3 style="margin-bottom: 10px; color: #b0b8d0;">Шаги:</h3>
+                    <div class="steps-container">${d.steps.map(s => `
+                      <div class="step ${String(s.k)==='init'?'init-step':''} ${typeof s.k==='number' && String(s.description).includes('порядок!')?'result-step':''}">
+                        <span class="step-num">[${s.k}]</span> ${escapeHtml(s.description)}
+                      </div>`).join('')}
+                    </div>
+                `;
+            } else if (mode === 'legendre') {
+                const sqrtHtml = d.sqrt ? `<div class="prop-card">
+                  <div class="label">Квадратные корни</div>
+                  <div class="value">±${d.sqrt[0]} mod ${d.p} = {${d.sqrt[0]}, ${d.sqrt[1]}}</div>
+                  </div>` : '';
+                body.innerHTML = `
+                    <div class="prop-grid">
+                      <div class="prop-card">
+                        <div class="label">(a/p)</div>
+                        <div class="value">(${d.a}/${d.p}) = ${d.value}</div>
+                        <div class="sub">${escapeHtml(d.meaning)}</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">Критерий Эйлера</div>
+                        <div class="value neutral" style="font-size:1em">${escapeHtml(d.power_computation)}</div>
+                      </div>
+                      ${sqrtHtml}
+                    </div>
+                `;
+            } else if (mode === 'jacobi') {
+                const factHtml = Object.entries(d.factorization_of_n)
+                    .map(([p, e]) => e > 1 ? `${p}^${e}` : p).join(' · ');
+                body.innerHTML = `
+                    <div class="prop-grid">
+                      <div class="prop-card">
+                        <div class="label">(a/n)</div>
+                        <div class="value">(${d.a}/${d.n}) = ${d.value}</div>
+                        <div class="sub">${escapeHtml(d.meaning)}</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">Разложение n</div>
+                        <div class="value neutral">${escapeHtml(factHtml)}</div>
+                      </div>
+                    </div>
+                `;
+            } else if (mode === 'smooth') {
+                const msg = d.is_B_smooth ?
+                    `${d.n} — ${d.B}-гладкое` :
+                    `${d.n} НЕ ${d.B}-гладкое (остаток ${d.remainder})`;
+                body.innerHTML = `
+                    <div class="prop-grid">
+                      <div class="prop-card">
+                        <div class="label">Результат</div>
+                        <div class="value" style="color: ${d.is_B_smooth?'#a8ff78':'#ff6b6b'}">${escapeHtml(msg)}</div>
+                      </div>
+                      <div class="prop-card">
+                        <div class="label">Простые до B</div>
+                        <div class="value neutral" style="font-size:1em">${d.primes_up_to_B.join(', ')}</div>
+                      </div>
+                      <div class="prop-card" style="grid-column: 1 / -1;">
+                        <div class="label">Разложение по ℱ𝓑</div>
+                        <div class="value">${escapeHtml(d.factorization_str)}</div>
+                      </div>
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = String(t);
+            return d.innerHTML;
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+    </script>
+</body>
+</html>
