@@ -1,0 +1,8 @@
+services:
+  numtheory-tools:
+    build: .
+    container_name: numtheory-tools
+    ports:
+      # Проброс порта: снаружи 8080 → внутри контейнера 8080
+      - "8080:8080"
+    restart: unless-stopped

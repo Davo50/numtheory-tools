@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Факторизация чисел</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .method-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .method-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #a0a8d0;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .method-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            color: #fff;
+        }
+
+        .method-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b0b8d0;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-group .hint {
+            font-size: 0.78em;
+            color: #7a82a0;
+            margin-top: 4px;
+        }
+
+        .params-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .extra-params {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .extra-params.visible {
+            display: block;
+        }
+
+        .btn-factorize {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-factorize:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-factorize:active {
+            transform: translateY(0);
+        }
+
+        .btn-factorize:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-card {
+            display: none;
+        }
+
+        .result-card.visible {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-header h2 {
+            font-size: 1.4em;
+            color: #667eea;
+        }
+
+        .result-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #a8ff78;
+        }
+
+        .result-value.error {
+            color: #ff6b6b;
+        }
+
+        .steps-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .steps-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .steps-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .steps-container::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 3px;
+        }
+
+        .step {
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #667eea;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.5;
+            transition: background 0.2s;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .step:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .step.result-step {
+            border-left-color: #a8ff78;
+            background: rgba(168, 255, 120, 0.08);
+            font-weight: 700;
+            font-size: 0.95em;
+        }
+
+        .step.error-step {
+            border-left-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.08);
+            font-weight: 700;
+        }
+
+        .step.init-step {
+            border-left-color: #ffd700;
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .step-num {
+            color: #667eea;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .method-description {
+            font-size: 0.85em;
+            color: #8890a8;
+            margin-top: 8px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .examples-block {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.08);
+            border-radius: 8px;
+            font-size: 0.82em;
+            color: #9098b8;
+        }
+
+        .examples-block code {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: #c0c8e8;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .examples-block code:hover {
+            background: rgba(102, 126, 234, 0.3);
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .method-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД (Евклид)</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">F₂[X] и Монтгомери</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🔢 Факторизация чисел</h1>
+
+        <div class="card">
+            <div class="method-selector">
+                <button class="method-btn active" data-method="fermat" onclick="selectMethod('fermat', this)">
+                    Ферма
+                </button>
+                <button class="method-btn" data-method="p1_pollard" onclick="selectMethod('p1_pollard', this)">
+                    p−1 Полларда
+                </button>
+                <button class="method-btn" data-method="rho_pollard" onclick="selectMethod('rho_pollard', this)">
+                    ρ Полларда
+                </button>
+                <button class="method-btn" data-method="lenstra" onclick="selectMethod('lenstra', this)">
+                    Ленстра (ECM)
+                </button>
+                <button class="method-btn" data-method="quadratic_sieve" onclick="selectMethod('quadratic_sieve', this)">
+                    Квадратичное решето
+                </button>
+            </div>
+
+            <!-- Описания методов -->
+            <div id="desc-fermat" class="method-description">
+                <strong>Метод Ферма:</strong> ищет представление N = x² − y², т.е. N = (x−y)(x+y).
+                Перебирает x начиная с ⌈√N⌉ и проверяет, является ли x²−N полным квадратом.
+            </div>
+            <div id="desc-p1_pollard" class="method-description" style="display:none;">
+                <strong>p−1 метод Полларда:</strong> вычисляет k = LCM(1,...,B), затем для a = 2,3,...
+                проверяет GCD(a^k − 1, N). Работает, если у p−1 (для делителя p) все простые множители ≤ B.
+            </div>
+            <div id="desc-rho_pollard" class="method-description" style="display:none;">
+                <strong>ρ-метод Полларда:</strong> использует произвольный многочлен f(x) mod N
+                и алгоритм Флойда (черепаха и заяц) для поиска цикла. Находит делитель через GCD(|x_i − x_{2i}|, N).
+            </div>
+            <div id="desc-lenstra" class="method-description" style="display:none;">
+                <strong>Метод Ленстры (ECM):</strong> использует арифметику эллиптических кривых
+                над ℤ/Nℤ. Вычисляет k·P, где k — произведение простых ≤ B. Делитель находится,
+                когда обратный элемент не существует mod N.
+            </div>
+            <div id="desc-quadratic_sieve" class="method-description" style="display:none;">
+                <strong>Квадратичное решето (verbose):</strong> строит фактор-базу, собирает B-гладкие значения
+                Q = v² − N, затем решает систему над GF(2) и выводит все этапы:
+                построение базы, каждую попытку получить отношение, линейную алгебру и проверку зависимостей.
+            </div>
+
+            <!-- Общий параметр N -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="input-N">Число N для факторизации:</label>
+                <input type="number" id="input-N" placeholder="Например: 1359331" value="1359331">
+            </div>
+
+            <!-- Fermat -->
+            <div id="params-fermat" class="extra-params visible">
+                <p style="color: #8890a8; font-size: 0.9em;">Дополнительных параметров не требуется.</p>
+            </div>
+
+            <!-- p-1 Pollard -->
+            <div id="params-p1_pollard" class="extra-params">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-B-p1">Граница гладкости B:</label>
+                        <input type="number" id="input-B-p1" placeholder="B" value="20">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rho Pollard -->
+            <div id="params-rho_pollard" class="extra-params">
+                <div class="form-group">
+                    <label for="input-poly">Многочлен f(x) (переменная — x):</label>
+                    <input type="text" id="input-poly" placeholder="x**2 + 1" value="x**2 + 5">
+                    <div class="hint">
+                        Используйте <b>x</b> как переменную. Степень: <code>**</code>.
+                        Итеративная функция: f(v) = (многочлен при x=v) mod N.
+                    </div>
+                </div>
+                <div class="examples-block">
+                    Примеры:
+                    <code onclick="document.getElementById('input-poly').value='x**2 + 1'">x**2 + 1</code>
+                    <code onclick="document.getElementById('input-poly').value='x**2 + 5'">x**2 + 5</code>
+                    <code onclick="document.getElementById('input-poly').value='x**3 + x + 1'">x**3 + x + 1</code>
+                    <code onclick="document.getElementById('input-poly').value='x**2 - 1'">x**2 - 1</code>
+                    <code onclick="document.getElementById('input-poly').value='x**2 + 3*x + 2'">x**2 + 3*x + 2</code>
+                </div>
+                <div class="params-row" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label for="input-x0">Начальное значение x₀:</label>
+                        <input type="number" id="input-x0" placeholder="x₀" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lenstra -->
+            <div id="params-lenstra" class="extra-params">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-B-lenstra">Граница B:</label>
+                        <input type="number" id="input-B-lenstra" placeholder="B" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-x-coord">Координата x точки P:</label>
+                        <input type="number" id="input-x-coord" placeholder="x" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-y-coord">Координата y точки P:</label>
+                        <input type="number" id="input-y-coord" placeholder="y" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-a-param">Параметр a кривой:</label>
+                        <input type="number" id="input-a-param" placeholder="a" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quadratic Sieve -->
+            <div id="params-quadratic_sieve" class="extra-params">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-B-qs">Граница фактор-базы B:</label>
+                        <input type="number" id="input-B-qs" placeholder="B" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-qs-max-iter">Макс. итераций:</label>
+                        <input type="number" id="input-qs-max-iter" placeholder="max_iterations" value="500">
+                    </div>
+                </div>
+                <div class="hint">
+                    Больше B и max_iterations дают выше шанс факторизации, но шагов в логе будет больше.
+                </div>
+            </div>
+
+            <button class="btn-factorize" id="btn-run" onclick="runFactorization()">
+                Факторизовать
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Вычисление...</p>
+        </div>
+
+        <div class="card result-card" id="result-card">
+            <div class="result-header">
+                <h2>📊 Результат</h2>
+                <span id="step-count" style="color: #8890a8; font-size: 0.9em;"></span>
+            </div>
+            <div class="result-value" id="result-value"></div>
+            <h3 style="margin-bottom: 12px; color: #b0b8d0;">Пошаговые вычисления:</h3>
+            <div class="steps-container" id="steps-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'fermat';
+
+        function selectMethod(method, btn) {
+            currentMethod = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.extra-params').forEach(p => p.classList.remove('visible'));
+            document.getElementById('params-' + method).classList.add('visible');
+
+            document.querySelectorAll('.method-description').forEach(d => d.style.display = 'none');
+            document.getElementById('desc-' + method).style.display = 'block';
+        }
+
+        async function runFactorization() {
+            const N = document.getElementById('input-N').value;
+            if (!N || parseInt(N) < 2) {
+                alert('Введите число N ≥ 2');
+                return;
+            }
+
+            const payload = {
+                method: currentMethod,
+                N: N
+            };
+
+            if (currentMethod === 'p1_pollard') {
+                payload.B = document.getElementById('input-B-p1').value;
+            } else if (currentMethod === 'rho_pollard') {
+                payload.polynomial = document.getElementById('input-poly').value;
+                payload.x0 = document.getElementById('input-x0').value;
+            } else if (currentMethod === 'lenstra') {
+                payload.B = document.getElementById('input-B-lenstra').value;
+                payload.x_coord = document.getElementById('input-x-coord').value;
+                payload.y_coord = document.getElementById('input-y-coord').value;
+                payload.a_param = document.getElementById('input-a-param').value;
+            } else if (currentMethod === 'quadratic_sieve') {
+                payload.B = document.getElementById('input-B-qs').value;
+                payload.max_iterations = document.getElementById('input-qs-max-iter').value;
+            }
+
+            const btn = document.getElementById('btn-run');
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('result-card');
+
+            btn.disabled = true;
+            loading.classList.add('visible');
+            resultCard.classList.remove('visible');
+
+            try {
+                const response = await fetch('/factorize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.error && !data.steps) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+
+                const resultValue = document.getElementById('result-value');
+                const stepsContainer = document.getElementById('steps-container');
+                const stepCount = document.getElementById('step-count');
+
+                if (data.success) {
+                    resultValue.className = 'result-value';
+                    resultValue.textContent = `${N} = ${data.factors[0]} × ${data.factors[1]}`;
+                } else {
+                    resultValue.className = 'result-value error';
+                    resultValue.textContent = data.error || 'Факторизация не удалась';
+                }
+
+                stepsContainer.innerHTML = '';
+                if (data.steps) {
+                    stepCount.textContent = `Шагов: ${data.steps.length}`;
+                    data.steps.forEach(step => {
+                        const div = document.createElement('div');
+                        div.className = 'step';
+
+                        const iterStr = String(step.iteration || '');
+                        if (iterStr === 'Результат') {
+                            div.classList.add('result-step');
+                        } else if (iterStr === 'Ошибка') {
+                            div.classList.add('error-step');
+                        } else if (step.phase === 'init' || step.phase === 'discriminant') {
+                            div.classList.add('init-step');
+                        }
+
+                        div.innerHTML = `<span class="step-num">[${step.iteration}]</span>${escapeHtml(step.description)}`;
+                        stepsContainer.appendChild(div);
+                    });
+                }
+
+                resultCard.classList.add('visible');
+
+            } catch (err) {
+                alert('Произошла ошибка: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('visible');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                runFactorization();
+            }
+        });
+    </script>
+</body>
+</html>

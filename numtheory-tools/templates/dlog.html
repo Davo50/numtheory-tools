@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дискретный логарифм</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .method-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .method-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #a0a8d0;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .method-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            color: #fff;
+        }
+        .method-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .method-description {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #b0b8d0;
+            line-height: 1.6;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b0b8d0;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1em;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+        .form-group .hint {
+            font-size: 0.78em;
+            color: #7a82a0;
+            margin-top: 4px;
+        }
+        .params-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .h-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+        }
+        .h-mode label {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #a0a8d0;
+            transition: all 0.2s;
+        }
+        .h-mode input[type="radio"] { display: none; }
+        .h-mode input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+        .btn-run {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result-card { display: none; }
+        .result-card.visible { display: block; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .result-header h2 { font-size: 1.4em; color: #667eea; }
+        .result-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #a8ff78;
+        }
+        .result-value.error { color: #ff6b6b; }
+        .steps-container {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .steps-container::-webkit-scrollbar { width: 6px; }
+        .steps-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05); border-radius: 3px;
+        }
+        .steps-container::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5); border-radius: 3px;
+        }
+        .step {
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #667eea;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .step .step-num {
+            display: inline-block;
+            min-width: 90px;
+            color: #7a82a0;
+            font-weight: 600;
+        }
+        .step.result-step {
+            border-left-color: #a8ff78;
+            background: rgba(168, 255, 120, 0.08);
+            color: #d0ffb0;
+        }
+        .step.error-step {
+            border-left-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.08);
+            color: #ffb0b0;
+        }
+        .step.init-step {
+            border-left-color: #ffd93d;
+            background: rgba(255, 217, 61, 0.06);
+        }
+        .step.table-step {
+            border-left-color: #a29bfe;
+            background: rgba(162, 155, 254, 0.06);
+        }
+        .step.collision-step {
+            border-left-color: #ff7f7f;
+            background: rgba(255, 127, 127, 0.10);
+        }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.visible { display: block; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .examples-block {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #8890a8;
+        }
+        .examples-block code {
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.15);
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin: 3px;
+            display: inline-block;
+            color: #c0c8e8;
+        }
+        .examples-block code:hover {
+            background: rgba(102, 126, 234, 0.3);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД (Евклид)</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">F₂[X] и Монтгомери</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🔐 Дискретный логарифм</h1>
+
+        <div class="card">
+            <div class="method-selector">
+                <button class="method-btn active" onclick="selectMethod('bsgs', this)">Шенкса (BSGS)</button>
+                <button class="method-btn" onclick="selectMethod('rho', this)">ρ Полларда</button>
+                <button class="method-btn" onclick="selectMethod('pohlig_hellman', this)">Полиг-Хеллман</button>
+            </div>
+
+            <div id="desc-bsgs" class="method-description">
+                <strong>Алгоритм Гельфонда-Шэнкса (Baby-step Giant-step)</strong>, Л5 стр. 4.
+                Считаем <code>s = ⌈√n⌉</code>, строим малый шаг <code>S = {(y·g^r, r) : r=0…s−1}</code>
+                и большой шаг <code>T = {(g^ts, ts) : t=0…s}</code>, ищем совпадение.
+                Тогда <code>x = ts − r</code>. Сложность <code>O(√n · log n)</code>.
+            </div>
+            <div id="desc-rho" class="method-description" style="display:none;">
+                <strong>ρ-алгоритм Полларда для ДЛ</strong>, Л5 стр. 18–20.
+                Разбиение <code>G = A ∪ B ∪ C</code> по остатку <code>z mod 3</code>.
+                Параллельно считаем <code>z_i</code> и <code>z_{2i}</code>, ждём коллизию.
+                Тогда <code>x = (α_{2i} − α_i) · (β_i − β_{2i})⁻¹ mod n</code>.
+                Преимущество — память <code>O(1)</code>.
+            </div>
+            <div id="desc-pohlig_hellman" class="method-description" style="display:none;">
+                <strong>Алгоритм Полига-Хеллмана</strong>, Л5 стр. 9–16.
+                Работает, когда <code>p−1</code> — B-гладкое число. Раскладываем
+                <code>p−1 = ∏ pᵢ^αᵢ</code>, для каждой силы <code>pᵢ^αᵢ</code> находим
+                <code>x mod pᵢ^αᵢ</code> по таблицам <code>r_{pᵢ,j} = g^(j·(p−1)/pᵢ)</code>,
+                потом склеиваем ответ по Китайской теореме об остатках.
+            </div>
+
+            <div class="params-row">
+                <div class="form-group">
+                    <label for="input-g">Образующий g:</label>
+                    <input type="number" id="input-g" value="5">
+                </div>
+                <div class="form-group">
+                    <label for="input-p">Простое p:</label>
+                    <input type="number" id="input-p" value="23">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Формат «дано»:</label>
+                <div class="h-mode">
+                    <input type="radio" id="mode-h" name="hmode" value="h" checked>
+                    <label for="mode-h">Дано g, g^x, p → найти x</label>
+                    <input type="radio" id="mode-x" name="hmode" value="x">
+                    <label for="mode-x">Сгенерировать из x (для проверки)</label>
+                </div>
+            </div>
+
+            <div id="block-h" class="form-group">
+                <label for="input-h">g^x (значение):</label>
+                <input type="number" id="input-h" value="12">
+                <div class="hint">
+                    Это число из дано после знака «=». Например, в задаче «Дано: g = 5, g^x = 12, p = 23, найти x» — сюда вводишь 12.
+                </div>
+            </div>
+            <div id="block-x" class="form-group" style="display:none;">
+                <label for="input-x-known">Известная степень x:</label>
+                <input type="number" id="input-x-known" value="100">
+                <div class="hint">
+                    Программа сама посчитает g^x mod p и потом найдёт x обратно — для проверки работы алгоритма.
+                </div>
+            </div>
+
+            <div class="examples-block">
+                Примеры:
+                <code onclick="setEx(5,23,12,'bsgs','h')">g=5, g^x=12, p=23 (BSGS)</code>
+                <code onclick="setEx(3,31,24,'bsgs','h')">g=3, g^x=24, p=31 (BSGS, ответ 13)</code>
+                <code onclick="setEx(2,181,62,'pohlig_hellman','h')">g=2, g^x=62, p=181 (Полиг, ответ 100)</code>
+                <code onclick="setEx(6,229,13,'index_calculus','h')">g=6, g^x=13, p=229 (ответ 117) — для Index calc (на /advanced)</code>
+            </div>
+
+            <button class="btn-run" id="btn-run" onclick="runDlog()">Найти x</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Вычисление...</p>
+        </div>
+
+        <div class="card result-card" id="result-card">
+            <div class="result-header">
+                <h2>📊 Результат</h2>
+                <span id="step-count" style="color: #8890a8; font-size: 0.9em;"></span>
+            </div>
+            <div class="result-value" id="result-value"></div>
+            <h3 style="margin-bottom: 12px; color: #b0b8d0;">Пошаговые вычисления:</h3>
+            <div class="steps-container" id="steps-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'bsgs';
+
+        function selectMethod(method, btn) {
+            currentMethod = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.method-description').forEach(d => d.style.display = 'none');
+            document.getElementById('desc-' + method).style.display = 'block';
+        }
+
+        document.querySelectorAll('input[name="hmode"]').forEach(r => {
+            r.addEventListener('change', () => {
+                document.getElementById('block-x').style.display = (r.value === 'x' && r.checked) ? 'block' : 'none';
+                document.getElementById('block-h').style.display = (r.value === 'h' && r.checked) ? 'block' : 'none';
+                if (r.checked && r.value === 'h') document.getElementById('block-x').style.display = 'none';
+                if (r.checked && r.value === 'x') document.getElementById('block-h').style.display = 'none';
+            });
+        });
+
+        function setEx(g, p, value, method, mode) {
+            mode = mode || 'h';
+            document.getElementById('input-g').value = g;
+            document.getElementById('input-p').value = p;
+            if (mode === 'h') {
+                document.getElementById('input-h').value = value;
+                document.getElementById('mode-h').checked = true;
+                document.getElementById('block-h').style.display = 'block';
+                document.getElementById('block-x').style.display = 'none';
+            } else {
+                document.getElementById('input-x-known').value = value;
+                document.getElementById('mode-x').checked = true;
+                document.getElementById('block-x').style.display = 'block';
+                document.getElementById('block-h').style.display = 'none';
+            }
+            document.querySelectorAll('.method-btn').forEach(b => {
+                const t = b.textContent.toLowerCase();
+                if ((method === 'bsgs' && t.includes('шенкс')) ||
+                    (method === 'rho' && t.includes('ρ пол')) ||
+                    (method === 'pohlig_hellman' && t.includes('полиг'))) {
+                    selectMethod(method, b);
+                }
+                // index_calculus — переход на /advanced, ничего здесь не переключаем
+            });
+        }
+
+        async function runDlog() {
+            const payload = {
+                method: currentMethod,
+                g: document.getElementById('input-g').value,
+                p: document.getElementById('input-p').value
+            };
+            const mode = document.querySelector('input[name="hmode"]:checked').value;
+            if (mode === 'x') {
+                payload.x_known = document.getElementById('input-x-known').value;
+            } else {
+                payload.h = document.getElementById('input-h').value;
+            }
+
+            const btn = document.getElementById('btn-run');
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('result-card');
+            btn.disabled = true;
+            loading.classList.add('visible');
+            resultCard.classList.remove('visible');
+
+            try {
+                const resp = await fetch('/api/dlog', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.error && !data.steps) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+                const rv = document.getElementById('result-value');
+                if (data.success) {
+                    rv.className = 'result-value';
+                    rv.textContent = `x = ${data.result}`;
+                } else {
+                    rv.className = 'result-value error';
+                    rv.textContent = data.error || 'Не удалось вычислить';
+                }
+                const cont = document.getElementById('steps-container');
+                cont.innerHTML = '';
+                document.getElementById('step-count').textContent = `Шагов: ${data.steps.length}`;
+                data.steps.forEach(step => {
+                    const div = document.createElement('div');
+                    div.className = 'step';
+                    const it = String(step.iteration || '');
+                    if (it === 'Результат') div.classList.add('result-step');
+                    else if (it === 'Ошибка') div.classList.add('error-step');
+                    else if (it === 'collision') div.classList.add('collision-step');
+                    else if (step.phase === 'init') div.classList.add('init-step');
+                    else if (step.phase === 'table' || step.phase === 'table_row' || step.phase === 'table_header')
+                        div.classList.add('table-step');
+                    div.innerHTML = `<span class="step-num">[${step.iteration}]</span> ${escapeHtml(step.description)}`;
+                    cont.appendChild(div);
+                });
+                resultCard.classList.add('visible');
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('visible');
+            }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') runDlog(); });
+    </script>
+</body>
+</html>

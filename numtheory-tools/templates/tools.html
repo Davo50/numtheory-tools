@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инструменты Л1 — Безу, цепные дроби, степень</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .method-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .method-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #a0a8d0;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .method-btn:hover { border-color: #667eea; background: rgba(102,126,234,.2); color: #fff; }
+        .method-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .method-description {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #b0b8d0;
+            line-height: 1.6;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b0b8d0;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1em;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 10px rgba(102,126,234,.2); }
+        .form-group .hint { font-size: 0.78em; color: #7a82a0; margin-top: 4px; }
+        .params-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+        .section { display: none; }
+        .section.visible { display: block; }
+        .btn-run {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; font-size: 1.1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s; margin-top: 10px;
+        }
+        .btn-run:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,.5); }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result-card { display: none; }
+        .result-card.visible { display: block; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .result-header h2 { font-size: 1.4em; color: #667eea; }
+        .result-value {
+            font-size: 1.3em; font-weight: 700; text-align: center; padding: 15px;
+            background: rgba(102, 126, 234, 0.15); border-radius: 10px;
+            margin-bottom: 20px; color: #a8ff78; word-break: break-word;
+        }
+        .result-value.error { color: #ff6b6b; }
+        .steps-container { max-height: 600px; overflow-y: auto; padding-right: 5px; }
+        .steps-container::-webkit-scrollbar { width: 6px; }
+        .steps-container::-webkit-scrollbar-track { background: rgba(255,255,255,.05); border-radius: 3px; }
+        .steps-container::-webkit-scrollbar-thumb { background: rgba(102,126,234,.5); border-radius: 3px; }
+        .step {
+            padding: 10px 14px; margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #667eea;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em; line-height: 1.55; word-break: break-word;
+        }
+        .step .step-num { display: inline-block; min-width: 70px; color: #7a82a0; font-weight: 600; }
+        .step.result-step { border-left-color: #a8ff78; background: rgba(168,255,120,.08); color: #d0ffb0; }
+        .step.error-step { border-left-color: #ff6b6b; background: rgba(255,107,107,.08); color: #ffb0b0; }
+        .step.init-step { border-left-color: #ffd93d; background: rgba(255,217,61,.06); }
+        .step.row-step { border-left-color: #a29bfe; background: rgba(162,155,254,.06); }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.visible { display: block; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(102,126,234,.2);
+            border-top-color: #667eea; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .examples-block { margin-top: 10px; padding: 10px; background: rgba(0,0,0,.15); border-radius: 8px; font-size: .85em; color: #8890a8; }
+        .examples-block code {
+            cursor: pointer; background: rgba(102,126,234,.15); padding: 3px 8px;
+            border-radius: 5px; margin: 3px; display: inline-block; color: #c0c8e8;
+        }
+        .examples-block code:hover { background: rgba(102,126,234,.3); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД (Евклид)</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">F₂[X] / Монтгомери</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🛠 Расширенный Евклид, цепные дроби, степень</h1>
+
+        <div class="card">
+            <div class="method-selector">
+                <button class="method-btn active" onclick="selectMethod('euclid_ext', this)">Расширенный Евклид (Безу)</button>
+                <button class="method-btn" onclick="selectMethod('cf', this)">Цепная дробь</button>
+                <button class="method-btn" onclick="selectMethod('fastpow', this)">Быстрая степень x^e mod N</button>
+            </div>
+
+            <div id="desc-euclid_ext" class="method-description">
+                <strong>Расширенный алгоритм Евклида</strong>, Л1 стр. 19–20.
+                Находит <code>d = НОД(a, b)</code> и такие <code>x, y</code>, что <code>a·x + b·y = d</code>
+                (коэффициенты Безу). Ведём тройки <code>(xᵢ, yᵢ, zᵢ)</code>, где <code>a·xᵢ + b·yᵢ = zᵢ</code>.
+            </div>
+            <div id="desc-cf" class="method-description" style="display:none;">
+                <strong>Разложение рациональной дроби в цепную дробь</strong>, Л1 стр. 22–28.
+                Частные <code>q₁, q₂, …, q_n</code> — частные делений в алгоритме Евклида.
+                Таблица подходящих дробей <code>P_s/Q_s</code> по рекуррентности
+                <code>P_s = q_{s+1}·P_{s-1} + P_{s-2}</code>, <code>Q_s = q_{s+1}·Q_{s-1} + Q_{s-2}</code>.
+            </div>
+            <div id="desc-fastpow" class="method-description" style="display:none;">
+                <strong>Быстрое возведение в степень по модулю</strong> (бинарный метод), Л1 стр. 32.
+                Идёт по битам <code>e</code> от старшего к младшему: каждый шаг — возведение в квадрат,
+                при бите 1 — дополнительное умножение на x. Сложность <code>O(L₂(e))</code> умножений.
+            </div>
+
+            <!-- Расширенный Евклид / Цепные дроби: одинаковые поля a/b (num/den) -->
+            <div id="section-pair" class="section visible">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-a">Числитель / a:</label>
+                        <input type="number" id="input-a" value="1071">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-b">Знаменатель / b:</label>
+                        <input type="number" id="input-b" value="462">
+                    </div>
+                </div>
+                <div class="examples-block" id="examples-pair">
+                    Примеры: <code onclick="setPair(1071,462)">1071, 462</code>
+                    <code onclick="setPair(99,78)">99, 78</code>
+                    <code onclick="setPair(17,5)">17, 5</code>
+                    <code onclick="setPair(355,113)">355/113 (π)</code>
+                </div>
+            </div>
+
+            <!-- Fast pow -->
+            <div id="section-fastpow" class="section">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-x">x:</label>
+                        <input type="number" id="input-x" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-e">e:</label>
+                        <input type="number" id="input-e" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-N">N:</label>
+                        <input type="number" id="input-N" value="181">
+                    </div>
+                </div>
+                <div class="examples-block">
+                    Примеры из лекций:
+                    <code onclick="setPow(2,100,181)">2^100 mod 181 = 62</code>
+                    <code onclick="setPow(3,13,31)">3^13 mod 31 = 24</code>
+                </div>
+            </div>
+
+            <button class="btn-run" id="btn-run" onclick="runAlgo()">Запустить</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Вычисление...</p>
+        </div>
+
+        <div class="card result-card" id="result-card">
+            <div class="result-header">
+                <h2>📊 Результат</h2>
+                <span id="step-count" style="color: #8890a8; font-size: 0.9em;"></span>
+            </div>
+            <div class="result-value" id="result-value"></div>
+            <h3 style="margin-bottom: 12px; color: #b0b8d0;">Пошаговые вычисления:</h3>
+            <div class="steps-container" id="steps-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'euclid_ext';
+
+        function selectMethod(method, btn) {
+            currentMethod = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.method-description').forEach(d => d.style.display = 'none');
+            document.getElementById('desc-' + method).style.display = 'block';
+
+            const pair = document.getElementById('section-pair');
+            const pow = document.getElementById('section-fastpow');
+            if (method === 'fastpow') {
+                pair.classList.remove('visible');
+                pow.classList.add('visible');
+            } else {
+                pair.classList.add('visible');
+                pow.classList.remove('visible');
+                // подсветим подсказки
+                const lbl_a = document.querySelector('#section-pair label[for="input-a"]');
+                const lbl_b = document.querySelector('#section-pair label[for="input-b"]');
+                if (method === 'cf') {
+                    lbl_a.textContent = 'Числитель:';
+                    lbl_b.textContent = 'Знаменатель:';
+                } else {
+                    lbl_a.textContent = 'a:';
+                    lbl_b.textContent = 'b:';
+                }
+            }
+        }
+
+        function setPair(a, b) {
+            document.getElementById('input-a').value = a;
+            document.getElementById('input-b').value = b;
+        }
+        function setPow(x, e, N) {
+            document.getElementById('input-x').value = x;
+            document.getElementById('input-e').value = e;
+            document.getElementById('input-N').value = N;
+            document.querySelectorAll('.method-btn').forEach(b => {
+                if (b.textContent.toLowerCase().includes('степень')) selectMethod('fastpow', b);
+            });
+        }
+
+        async function runAlgo() {
+            const btn = document.getElementById('btn-run');
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('result-card');
+            btn.disabled = true;
+            loading.classList.add('visible');
+            resultCard.classList.remove('visible');
+
+            try {
+                let url, payload;
+                if (currentMethod === 'euclid_ext') {
+                    url = '/api/euclid_ext';
+                    payload = { a: document.getElementById('input-a').value,
+                                b: document.getElementById('input-b').value };
+                } else if (currentMethod === 'cf') {
+                    url = '/api/continued_fraction';
+                    payload = { num: document.getElementById('input-a').value,
+                                den: document.getElementById('input-b').value };
+                } else {
+                    url = '/api/fastpow';
+                    payload = { x: document.getElementById('input-x').value,
+                                e: document.getElementById('input-e').value,
+                                N: document.getElementById('input-N').value };
+                }
+
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.error && !data.steps) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+                const rv = document.getElementById('result-value');
+                if (data.success) {
+                    rv.className = 'result-value';
+                    if (currentMethod === 'euclid_ext') {
+                        const a = document.getElementById('input-a').value;
+                        const b = document.getElementById('input-b').value;
+                        rv.innerHTML = `d = ${data.d};  ${a}·(${data.x}) + ${b}·(${data.y}) = ${data.d}`;
+                    } else if (currentMethod === 'cf') {
+                        rv.innerHTML = `[${data.quotients.join('; ')}]`;
+                    } else {
+                        rv.textContent = `x^e mod N = ${data.result}`;
+                    }
+                } else {
+                    rv.className = 'result-value error';
+                    rv.textContent = data.error || 'Не удалось вычислить';
+                }
+                const cont = document.getElementById('steps-container');
+                cont.innerHTML = '';
+                document.getElementById('step-count').textContent = `Шагов: ${data.steps.length}`;
+                data.steps.forEach(step => {
+                    const div = document.createElement('div');
+                    div.className = 'step';
+                    const it = String(step.iteration || '');
+                    if (it === 'Результат') div.classList.add('result-step');
+                    else if (it === 'Ошибка') div.classList.add('error-step');
+                    else if (step.phase === 'init') div.classList.add('init-step');
+                    else if (step.phase === 'row' || step.phase === 'convergent') div.classList.add('row-step');
+                    div.innerHTML = `<span class="step-num">[${step.iteration}]</span> ${escapeHtml(step.description)}`;
+                    cont.appendChild(div);
+                });
+                resultCard.classList.add('visible');
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('visible');
+            }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') runAlgo(); });
+    </script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Лекция 1 — краткий конспект (числовые методы криптографии)</title>
+
+  <!-- MathJax для формул -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$', '$']] },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  </script>
+  <script defer src="{{ url_for('static', filename='mathjax/es5/tex-mml-chtml.js') }}"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#111826; --ink:#e7eefc; --muted:#a9b6d3;
+      --accent:#7aa7ff; --line:#22314d; --code:#0f172a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,var(--bg),#070a0f);
+      color:var(--ink);
+      font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    header{padding:28px 18px 10px; max-width:980px; margin:0 auto;}
+    h1{margin:0 0 6px; font-size:24px}
+    .sub{color:var(--muted); margin:0 0 14px}
+    main{max-width:980px; margin:0 auto; padding:0 18px 40px}
+    section{
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:18px 18px 14px;
+      margin:14px 0;
+    }
+    h2{margin:0 0 10px; font-size:18px}
+    h3{margin:12px 0 6px; font-size:16px; color:var(--accent)}
+    ul{margin:8px 0 8px 20px}
+    li{margin:4px 0}
+    .def, .thm, .alg, .note{
+      border-left:4px solid var(--accent);
+      padding:10px 12px;
+      background:rgba(122,167,255,0.07);
+      border-radius:10px;
+      margin:10px 0;
+    }
+    .tag{
+      display:inline-block; font-size:12px; letter-spacing:.02em;
+      color:var(--muted); border:1px solid var(--line); padding:2px 8px;
+      border-radius:999px; margin-right:8px; vertical-align:middle;
+    }
+    code, pre{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+      background:rgba(15,23,42,0.7);
+      border:1px solid rgba(34,49,77,0.7);
+      border-radius:10px;
+    }
+    pre{padding:12px; overflow:auto; margin:10px 0}
+    .grid{
+      display:grid; gap:12px;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    }
+    .muted{color:var(--muted)}
+    footer{max-width:980px; margin:0 auto; padding:0 18px 30px; color:var(--muted)}
+    .kpi{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+    .pill{border:1px solid var(--line); padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.02)}
+  </style>
+</head>
+
+<body>
+<nav style="display:flex;gap:10px;justify-content:center;padding:16px;flex-wrap:wrap;max-width:980px;margin:0 auto">
+  <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.10);color:var(--muted);text-decoration:none;font-weight:600">Факторизация</a>
+  <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.10);color:var(--muted);text-decoration:none;font-weight:600">НОД (Евклид)</a>
+  <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.10);color:var(--muted);text-decoration:none;font-weight:600">Безу / CF / степень</a>
+  <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.10);color:var(--muted);text-decoration:none;font-weight:600">Дискретный log</a>
+  <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.10);color:var(--muted);text-decoration:none;font-weight:600">Index calc / EC</a>
+  <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.10);color:var(--muted);text-decoration:none;font-weight:600">F₂[X] и Монтгомери</a>
+  <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(122,167,255,.25);color:var(--ink);text-decoration:none;font-weight:600">Конспект Л1</a>
+</nav>
+<header>
+  <h1>Лекция 1. Числовые методы криптографии — краткий конспект</h1>
+  <p class="sub">
+    Представление чисел и длина записи, сложность базовых операций, \(\mathbb{Z}_N\),
+    алгоритм Евклида и Безу, цепные дроби, быстрое возведение в степень, Карацуба,
+    алгоритм Монтгомери (по слайдам).
+  </p>
+  <div class="kpi">
+    <span class="pill">Обозначения: \(\mathbb{Z}_N\), \(\gcd\), \(L_p(\cdot)\)</span>
+    <span class="pill">Модель: асимптотики \(O(\cdot)\) по длине входа</span>
+    <span class="pill">Ключевые подзадачи: mod-умножение, \(x^e\bmod N\), обратный по модулю</span>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <h2>1) Системы счисления и длина записи числа</h2>
+
+    <div class="def">
+      <span class="tag">Определение</span>
+      <strong>Позиционная \(p\)-ичная запись.</strong>
+      Любое целое \(x \ge 0\) представляется как
+
+      \[
+        x=\sum_{i=0}^{n-1} x_i p^i,\quad 0\le x_i < p,\quad x_{n-1}\ne 0 \ (x>0).
+      \]
+    </div>
+
+    <div class="def">
+      <span class="tag">Определение</span>
+      <strong>Длина записи \(L_p(x)\).</strong> Число цифр в \(p\)-ичной записи \(x>0\).
+      Эквивалентно:
+
+      \[
+        p^{L_p(x)-1}\le x < p^{L_p(x)}.
+      \]
+    </div>
+
+    <div class="thm">
+      <span class="tag">Оценка</span>
+      <strong>Длина произведения.</strong> Для \(x,y>0\):
+
+      \[
+        L_p(xy) \le L_p(x)+L_p(y),
+      \]
+      и снизу верно (с точностью до константы):
+
+      \[
+        L_p(x)+L_p(y)-O(1)\le L_p(xy).
+      \]
+      <div class="muted">
+        В тетради сдвиг может выглядеть как «\(-2\)» из-за выбора границ вида
+        \(p^{n-1}\le x\le p^n\).
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2) Стоимость базовых операций над целыми</h2>
+
+    <div class="note">
+      <span class="tag">Идея</span>
+      Сложность выражается через длину входа (количество цифр/бит).
+    </div>
+
+    <div class="grid">
+      <div class="alg">
+        <span class="tag">Утверждение</span>
+        <strong>Сложение/вычитание.</strong>
+
+        \[
+          T_{+/-}=O(\max(L_p(x),L_p(y))).
+        \]
+      </div>
+
+      <div class="alg">
+        <span class="tag">Утверждение</span>
+        <strong>Умножение (школьное).</strong>
+
+        \[
+          T_{\times}=O(L_p(x)\,L_p(y)).
+        \]
+      </div>
+
+      <div class="alg">
+        <span class="tag">Идея из конспекта</span>
+        <strong>Деление «в столбик».</strong> Для \(n\)-разрядного на \(m\)-разрядное:
+        порядка \(n-m+1\) шагов, в каждом — действия на \(m\) разрядах, т.е.
+        оценка вида \(O(m\,(n-m+1))\) на уровне «разрядных операций».
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3) Арифметика по модулю: \(\mathbb{Z}_N\)</h2>
+
+    <div class="def">
+      <span class="tag">Определение</span>
+      \(\mathbb{Z}_N\) — кольцо вычетов по модулю \(N\).
+      Операции: \(x\pm y\bmod N\), \(xy\bmod N\).
+    </div>
+
+    <div class="note">
+      <span class="tag">Приведение</span>
+      Для произведения обычно пишут:
+
+      \[
+        r \equiv xy \pmod N,\qquad r = xy - qN
+      \]
+      для некоторого частного \(q\) (на практике — деление/редукция).
+    </div>
+
+    <div class="thm">
+      <span class="tag">Оценки (битовые)</span>
+      Пусть \(N\) — \(n\)-битное (то есть \(L_2(N)\approx n\)).
+      Тогда:
+      <ul>
+        <li>\(x\pm y \bmod N\): \(O(n)\).</li>
+        <li>\(xy \bmod N\) при школьном умножении: \(O(n^2)\).</li>
+      </ul>
+    </div>
+
+    <div class="note">
+      <span class="tag">Ключевая подзадача</span>
+      Нахождение обратного \(x^{-1}\pmod N\) (решается расширенным Евклидом при \(\gcd(x,N)=1\)).
+    </div>
+  </section>
+
+  <section>
+    <h2>4) Алгоритм Евклида, НОД, Безу. Теорема Ламе</h2>
+
+    <div class="def">
+      <span class="tag">Алгоритм</span>
+      <strong>Евклид.</strong> Для \(a\ge b>0\):
+
+      \[
+        a=bq_1+r_1,\quad b=r_1q_2+r_2,\ \dots,\ r_{k-2}=r_{k-1}q_k+r_k,\quad r_k=0.
+      \]
+      Тогда \(\gcd(a,b)=r_{k-1}\).
+    </div>
+
+    <div class="thm">
+      <span class="tag">Теорема (Безу)</span>
+      Существуют целые \(x,y\), что
+
+      \[
+        ax+by=\gcd(a,b).
+      \]
+      Следствие: если \(\gcd(a,N)=1\), то коэффициент \(x\) даёт
+
+      \[
+        a^{-1}\equiv x\pmod N.
+      \]
+    </div>
+
+    <div class="alg">
+      <span class="tag">Алгоритм</span>
+      <strong>Расширенный Евклид.</strong>
+      Вместе с остатками поддерживаются коэффициенты так, чтобы на каждом шаге
+      выполнялось \(r_i = ax_i + by_i\).
+      В конце получаем \(\gcd(a,b)=ax+by\).
+    </div>
+
+    <div class="thm">
+      <span class="tag">Теорема Ламе (о числе шагов Евклида)</span>
+      Если алгоритм Евклида для \((a,b)\), \(a\ge b\), делает \(k\) делений (шагов),
+      то \(b \ge F_{k+1}\), где \(F_i\) — числа Фибоначчи.
+      Поэтому число шагов ограничено логарифмом:
+
+      \[
+        k \le \log_{\varphi}(b) + O(1) = O(\log b),
+      \]
+      где \(\varphi=\frac{1+\sqrt5}{2}\).
+      <div class="muted">Худший случай достигается на соседних числах Фибоначчи.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5) Цепные дроби (непрерывные дроби)</h2>
+
+    <div class="def">
+      <span class="tag">Определение</span>
+
+      \[
+        \alpha = q_0 + \cfrac{1}{q_1 + \cfrac{1}{q_2 + \cdots}}
+      \]
+      (конечная цепная дробь для рациональных, бесконечная — для иррациональных).
+    </div>
+
+    <div class="note">
+      <span class="tag">Связь с Евклидом</span>
+      Частные \(q_i\) — это частные в делениях алгоритма Евклида.
+    </div>
+
+    <div class="def">
+      <span class="tag">Сходящиеся</span>
+      Сходящиеся \(\dfrac{P_k}{Q_k}\) удовлетворяют рекурсиям:
+
+      \[
+        P_k = q_k P_{k-1} + P_{k-2},\qquad
+        Q_k = q_k Q_{k-1} + Q_{k-2}.
+      \]
+      <div class="muted">Начальные условия можно задавать эквивалентными способами (важна сама рекурсия).</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>6) Быстрое возведение в степень по модулю</h2>
+
+    <div class="alg">
+      <span class="tag">Алгоритм</span>
+      <strong>Square-and-multiply.</strong>
+      Для вычисления \(x^e \bmod N\) используем двоичную запись
+      \(e=\sum e_i2^i\), затем последовательно выполняем возведения в квадрат и умножения по модулю.
+    </div>
+
+    <div class="thm">
+      <span class="tag">Оценка</span>
+      Число mod-умножений порядка \(O(L_2(e))\), т.е.
+
+      \[
+        T \approx O(L_2(e)\cdot M(n)),
+      \]
+      где \(M(n)\) — стоимость умножения \(n\)-битных чисел (школьно \(M(n)=O(n^2)\)).
+    </div>
+  </section>
+
+  <section>
+    <h2>7) Умножение Карацубы. Мастер-теорема</h2>
+
+    <div class="def">
+      <span class="tag">Идея</span>
+      Разбить \(x,y\) на половины (для двоичной базы):
+
+      \[
+        x = x_1 2^k + x_0,\qquad y = y_1 2^k + y_0,
+      \]
+      и вычислить произведение через 3 рекурсивных умножения:
+
+      \[
+        x_1y_1,\quad x_0y_0,\quad (x_1+x_0)(y_1+y_0),
+      \]
+      вместо 4.
+    </div>
+
+    <div class="thm">
+      <span class="tag">Рекурсия</span>
+      Для \(n\) (размер/длина):
+
+      \[
+        T(2n)\le 3T(n)+cn.
+      \]
+      Следовательно,
+
+      \[
+        T(n)=O\!\left(n^{\log_2 3}\right)\approx O(n^{1.585}).
+      \]
+    </div>
+
+    <div class="thm">
+      <span class="tag">Мастер-теорема (шпаргалка)</span>
+      Для рекурсии
+
+      \[
+        T(n)=a\,T\!\left(\frac{n}{b}\right)+f(n),\quad a\ge 1,\ b>1,
+      \]
+      положим \(n^{\log_b a}\) как «базовый» рост.
+      Типовые случаи (достаточно для Карацубы и похожих оценок):
+      <ul>
+        <li>
+          Если \(f(n)=O\!\left(n^{\log_b a-\varepsilon}\right)\), то
+          \(T(n)=\Theta\!\left(n^{\log_b a}\right)\).
+        </li>
+        <li>
+          Если \(f(n)=\Theta\!\left(n^{\log_b a}\log^k n\right)\), то
+          \(T(n)=\Theta\!\left(n^{\log_b a}\log^{k+1} n\right)\).
+        </li>
+        <li>
+          Если \(f(n)=\Omega\!\left(n^{\log_b a+\varepsilon}\right)\) и выполнено условие регулярности
+          \(a f(n/b)\le c f(n)\) для некоторого \(c<1\), то \(T(n)=\Theta(f(n))\).
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>8) Алгоритм Монтгомери (по слайдам): определение, теорема, алгоритмы</h2>
+
+    <div class="def">
+      <span class="tag">Условия (со слайда)</span>
+      Выбираем \(R\) так, что
+      <ul>
+        <li>\(R>N\) и \(\gcd(R,N)=1\);</li>
+        <li>известно представление (со слайда):
+
+          \[
+            RR' - NN' = 1,\qquad 0<R'<N,
+          \]
+          откуда, в частности, следует
+
+          \[
+            N' \equiv -N^{-1}\pmod R,\qquad R' \equiv R^{-1}\pmod N.
+          \]
+        </li>
+      </ul>
+      <div class="muted">
+        На практике часто берут \(R=2^k\), чтобы деление на \(R\) было сдвигом.
+      </div>
+    </div>
+
+    <div class="def">
+      <span class="tag">Монтгомери-умножение (со слайда)</span>
+      Вводится новая операция \(\otimes\) на \(\mathbb{Z}_N\):
+
+      \[
+        x\otimes y \equiv xyR \pmod N.
+      \]
+      И отображение
+
+      \[
+        \varphi_R:\mathbb{Z}_N\to\mathbb{Z}_N,\qquad \varphi_R(x)=xR^{-1}\pmod N.
+      \]
+      <div class="muted">
+        Со слайда: задача — доказать, что \(\varphi_R\) является изоморфизмом колец
+        \((\mathbb{Z}_N,+,\cdot)\) и \((\mathbb{Z}_N,+,\otimes)\).
+        Проверка умножения: \(\varphi_R(xy)=\varphi_R(x)\otimes \varphi_R(y)\).
+      </div>
+    </div>
+
+    <div class="thm">
+      <span class="tag">Теорема (со слайда)</span>
+      Для любого целого \(0\le x < RN\) и числа
+
+      \[
+        m \equiv xN' \pmod R
+      \]
+      выполняются свойства для
+
+      \[
+        t=\frac{x+mN}{R}:
+      \]
+      <ol>
+        <li>\(t\) — целое число;</li>
+        <li>\(0\le t < 2N\);</li>
+        <li>\(t \equiv xR^{-1}\pmod N\).</li>
+      </ol>
+      <div class="muted">
+        Это и есть «Montgomery reduction»: вычисление \(xR^{-1}\bmod N\) без деления на \(N\).
+      </div>
+    </div>
+
+    <div class="alg">
+      <span class="tag">Algorithm (со слайда)</span>
+      <strong>Вычисление \(\varphi_R(x)\) (Montgomery reduction).</strong>
+      <pre><code>Вход:  x ∈ Z_N   (обычно x трактуют как целое 0 ≤ x &lt; RN)
+Выход: φ_R(x)
+
+1) m = x·N' (mod R)
+2) t = (x + m·N) / R
+3) if 0 ≤ t &lt; N:  return t
+4) else:          return t - N</code></pre>
+    </div>
+
+    <div class="alg">
+      <span class="tag">Algorithm (со слайда)</span>
+      <strong>Умножение по модулю через Монтгомери.</strong>
+      <div class="muted">
+        Идея: сначала посчитать «монтгомери-произведение» \(z=\varphi_R(xy)=xyR^{-1}\bmod N\),
+        затем вернуться в обычное представление применением \(\varphi_R^{-1}\).
+      </div>
+      <pre><code>Вход:  x, y ∈ Z_N
+Выход: x·y (mod N)
+
+1) z  = φ_R(x·y)       = x·y·R^{-1} (mod N)
+2) xy = φ_R^{-1}(z)
+3) return xy</code></pre>
+      <div class="muted">
+        Примечание: на практике обычно работают в «монтгомери-форме» (числа хранятся как xR mod N),
+        чтобы на каждом шаге не делать явного φ_R^{-1}.
+      </div>
+    </div>
+
+    <div class="alg">
+      <span class="tag">Algorithm (со слайда)</span>
+      <strong>Возведение в степень (через монтгомери-умножение \(\varphi\)).</strong>
+      <pre><code>Вход:  x ∈ Z_N, k ∈ N
+Выход: x^k (mod N)
+
+1) y1 = φ_R^{-1}(x) = x·R (mod N)
+2) Для i = 2..k:
+       yi = φ(yi-1, y1) = x^i·R (mod N)    // умножение в монтгомери-форме
+3) return φ_R(yk) = x^k·R·R^{-1} (mod N) = x^k (mod N)</code></pre>
+      <div class="muted">
+        Здесь \(\varphi(\cdot,\cdot)\) — «Montgomery multiply», возвращающее результат в монтгомери-форме.
+      </div>
+    </div>
+
+    <div class="alg">
+      <span class="tag">Algorithm (со слайда)</span>
+      <strong>\(p\)-ичный вариант (сканирование по цифрам), где \(R=p^n\).</strong>
+      <div class="muted">
+        На слайде: пусть \(L_p(N)=n\), \((N,p)=1\), \(R=p^n\). Тогда можно вычислять
+        \(\varphi_R(xy)=xyR^{-1}\bmod N\) итеративно по цифрам \(x\) в базе \(p\).
+      </div>
+      <pre><code>Вход:  x, y ∈ Z_N,  x = Σ_{i=0}^{n-1} x_i p^i
+Выход: z_n ≈ φ_R(xy)
+
+1) z0 = 0
+2) Для i = 1..n:
+       u = (z_{i-1} + x_{i-1}·y) (mod p)
+       v = u·N' (mod p)
+       z_i = (z_{i-1} + x_{i-1}·y + v·N) / p
+3) if 0 ≤ z_n &lt; N:  return z_n
+4) else:            return z_n - N</code></pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>Итог лекции (коротко)</h2>
+    <ul>
+      <li>Длина \(L_p(x)\) связывает величину числа и стоимость базовых алгоритмов.</li>
+      <li>Евклид и расширенный Евклид дают НОД, коэффициенты Безу и обратный по модулю; по Ламе число шагов \(O(\log b)\).</li>
+      <li>Быстрое \(x^e\bmod N\) сводится к последовательности mod-умножений; ускорение умножения: Карацуба (\(O(n^{\log_2 3})\)).</li>
+      <li>Монтгомери позволяет делать редукцию/умножение по модулю эффективно (особенно при \(R=2^k\)), что ускоряет modular exponentiation.</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <small>
+    Если надо — могу (а) добавить мини-доказательство изоморфизма \(\varphi_R\),
+    (б) сделать один полностью разобранный числовой пример Montgomery reduction на маленьких \(N,R\),
+    (в) привести единый блок «сложности» в терминах \(M(n)\) (школьное/Карацуба).
+  </small>
+</footer>
+</body>
+</html>

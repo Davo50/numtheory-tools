@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F₂[X] и Монтгомери</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .method-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .method-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #a0a8d0;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .method-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.2);
+            color: #fff;
+        }
+        .method-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .method-description {
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #b0b8d0;
+            line-height: 1.6;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #b0b8d0;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 1em;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+        .form-group .hint {
+            font-size: 0.78em;
+            color: #7a82a0;
+            margin-top: 4px;
+        }
+        .params-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .section { display: none; }
+        .section.visible { display: block; }
+        .btn-run {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result-card { display: none; }
+        .result-card.visible { display: block; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .result-header h2 { font-size: 1.4em; color: #667eea; }
+        .result-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.15);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #a8ff78;
+            word-break: break-word;
+        }
+        .result-value.error { color: #ff6b6b; }
+        .result-value .sub {
+            font-size: 0.8em;
+            color: #b0b8d0;
+            margin-top: 8px;
+            display: block;
+        }
+        .steps-container {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .steps-container::-webkit-scrollbar { width: 6px; }
+        .steps-container::-webkit-scrollbar-track { background: rgba(255,255,255,.05); border-radius: 3px; }
+        .steps-container::-webkit-scrollbar-thumb { background: rgba(102,126,234,.5); border-radius: 3px; }
+        .step {
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #667eea;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+        .step .step-num {
+            display: inline-block;
+            min-width: 70px;
+            color: #7a82a0;
+            font-weight: 600;
+        }
+        .step.result-step { border-left-color: #a8ff78; background: rgba(168,255,120,.08); color: #d0ffb0; }
+        .step.error-step { border-left-color: #ff6b6b; background: rgba(255,107,107,.08); color: #ffb0b0; }
+        .step.warn-step { border-left-color: #ffa502; background: rgba(255,165,2,.10); color: #ffd89c; }
+        .step.init-step { border-left-color: #ffd93d; background: rgba(255,217,61,.06); }
+        .step.split-step { border-left-color: #a29bfe; background: rgba(162,155,254,.06); }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.visible { display: block; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.2);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .examples-block {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #8890a8;
+        }
+        .examples-block code {
+            cursor: pointer;
+            background: rgba(102, 126, 234, 0.15);
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin: 3px;
+            display: inline-block;
+            color: #c0c8e8;
+        }
+        .examples-block code:hover { background: rgba(102,126,234,.3); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД (Евклид)</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">F₂[X] и Монтгомери</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🧮 Многочлены F₂[X] и Монтгомери</h1>
+
+        <div class="card">
+            <div class="method-selector">
+                <button class="method-btn active" onclick="selectMethod('euclid_binary', this)">Бинарный Евклид в F₂[X]</button>
+                <button class="method-btn" onclick="selectMethod('karatsuba', this)">Карацуба в F₂[X]</button>
+                <button class="method-btn" onclick="selectMethod('montgomery', this)">Умножение Монтгомери</button>
+            </div>
+
+            <div id="desc-euclid_binary" class="method-description">
+                <strong>Бинарный алгоритм Евклида для многочленов в F₂[X]</strong>
+                (адаптация псевдокода Л1 стр. 18 к многочленам).
+                Вход — два многочлена в битовой записи (старший коэффициент слева):
+                например <code>10011101</code> = x⁷+x⁴+x³+x²+1.
+                В F₂[X]: вычитание = XOR, «делится на 2» ↔ свободный коэф равен 0 (⇔ x | f).
+                Для корректной работы на многочленах сравнение «a ≥ b» заменено на сравнение по степени.
+            </div>
+            <div id="desc-karatsuba" class="method-description" style="display:none;">
+                <strong>Алгоритм Карацубы для F₂[X]</strong> (Л1 стр. 33–34).
+                Формула препода: <code>xy = (X²ᵏ+Xᵏ)·x₁y₁ ⊕ (x₁⊕x₀)(y₁⊕y₀)·Xᵏ ⊕ (Xᵏ+1)·x₀y₀</code>.
+                Сложность <code>T(2n) ≤ 3T(n) + cn ⇒ T(n) = O(n^log₂3) ≈ O(n^1.585)</code>.
+            </div>
+            <div id="desc-montgomery" class="method-description" style="display:none;">
+                <strong>Умножение по Монтгомери</strong> (Л1 стр. 36–40).
+                По определению: <code>x ⊗ y = x·y·R⁻¹ (mod N)</code>, где R > N, НОД(R, N) = 1.
+                Алгоритм вычисляет <code>φ_R(xy)</code>: m = xy·N' mod R; t = (xy + m·N)/R;
+                если t ≥ N, возвращаем t − N, иначе t.
+                R выбирается как минимальная степень 2, большая N (если не задано иное).
+            </div>
+
+            <!-- F_2[X] -->
+            <div id="section-poly" class="section visible">
+                <div class="form-group">
+                    <label for="input-f">Многочлен f (битовая запись):</label>
+                    <input type="text" id="input-f" value="10011101">
+                    <div class="hint">Пример: <code>10011101</code> = x⁷+x⁴+x³+x²+1</div>
+                </div>
+                <div class="form-group">
+                    <label for="input-g">Многочлен g (битовая запись):</label>
+                    <input type="text" id="input-g" value="111110">
+                    <div class="hint">Пример: <code>111110</code> = x⁵+x⁴+x³+x²+x</div>
+                </div>
+                <div class="examples-block">
+                    Примеры из КР (клик — подставит):
+                    <code onclick="setPoly('10011101','111110','euclid_binary')">В.2 зад.3: Евклид (10011101, 111110)</code>
+                    <code onclick="setPoly('100011101','111110','karatsuba')">В.3 зад.3: Карацуба (100011101, 111110)</code>
+                </div>
+            </div>
+
+            <!-- Монтгомери -->
+            <div id="section-montgomery" class="section">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="input-x">x:</label>
+                        <input type="number" id="input-x" value="155">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-y">y:</label>
+                        <input type="number" id="input-y" value="117">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-N">N:</label>
+                        <input type="number" id="input-N" value="299">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="input-R">R (необязательно):</label>
+                    <input type="number" id="input-R" placeholder="оставь пустым — возьмётся мин. степень 2 > N">
+                    <div class="hint">Нужно R > N и НОД(R, N) = 1.</div>
+                </div>
+                <div class="examples-block">
+                    Пример из КР:
+                    <code onclick="setMont(155, 117, 299)">В.5 зад.3: N=299, x=155, y=117</code>
+                </div>
+            </div>
+
+            <button class="btn-run" id="btn-run" onclick="runAlgo()">Запустить</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Вычисление...</p>
+        </div>
+
+        <div class="card result-card" id="result-card">
+            <div class="result-header">
+                <h2>📊 Результат</h2>
+                <span id="step-count" style="color: #8890a8; font-size: 0.9em;"></span>
+            </div>
+            <div class="result-value" id="result-value"></div>
+            <h3 style="margin-bottom: 12px; color: #b0b8d0;">Пошаговые вычисления:</h3>
+            <div class="steps-container" id="steps-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'euclid_binary';
+
+        function selectMethod(method, btn) {
+            currentMethod = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.method-description').forEach(d => d.style.display = 'none');
+            document.getElementById('desc-' + method).style.display = 'block';
+            const poly = document.getElementById('section-poly');
+            const mont = document.getElementById('section-montgomery');
+            if (method === 'montgomery') {
+                poly.classList.remove('visible');
+                mont.classList.add('visible');
+            } else {
+                poly.classList.add('visible');
+                mont.classList.remove('visible');
+            }
+        }
+
+        function setPoly(f, g, method) {
+            document.getElementById('input-f').value = f;
+            document.getElementById('input-g').value = g;
+            document.querySelectorAll('.method-btn').forEach(b => {
+                const t = b.textContent.toLowerCase();
+                if ((method === 'euclid_binary' && t.includes('евклид')) ||
+                    (method === 'karatsuba' && t.includes('карацуб'))) {
+                    selectMethod(method, b);
+                }
+            });
+        }
+
+        function setMont(x, y, N) {
+            document.getElementById('input-x').value = x;
+            document.getElementById('input-y').value = y;
+            document.getElementById('input-N').value = N;
+            document.getElementById('input-R').value = '';
+            document.querySelectorAll('.method-btn').forEach(b => {
+                if (b.textContent.toLowerCase().includes('монтгомери')) selectMethod('montgomery', b);
+            });
+        }
+
+        async function runAlgo() {
+            const btn = document.getElementById('btn-run');
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('result-card');
+            btn.disabled = true;
+            loading.classList.add('visible');
+            resultCard.classList.remove('visible');
+
+            try {
+                let url, payload;
+                if (currentMethod === 'montgomery') {
+                    url = '/api/montgomery';
+                    payload = {
+                        x: document.getElementById('input-x').value,
+                        y: document.getElementById('input-y').value,
+                        N: document.getElementById('input-N').value,
+                        R: document.getElementById('input-R').value || null
+                    };
+                } else {
+                    url = '/api/poly';
+                    payload = {
+                        method: currentMethod,
+                        a: document.getElementById('input-f').value,
+                        b: document.getElementById('input-g').value
+                    };
+                }
+
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.error && !data.steps) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+                const rv = document.getElementById('result-value');
+                if (data.success) {
+                    rv.className = 'result-value';
+                    if (currentMethod === 'montgomery') {
+                        rv.innerHTML = `x ⊗ y = ${data.result}`;
+                    } else {
+                        rv.innerHTML = `(${data.result_bin}) = ${escapeHtml(data.result_algebra)}` +
+                                       `<span class="sub">десятичное: ${data.result}</span>`;
+                    }
+                } else {
+                    rv.className = 'result-value error';
+                    rv.textContent = data.error || 'Не удалось вычислить';
+                }
+                const cont = document.getElementById('steps-container');
+                cont.innerHTML = '';
+                document.getElementById('step-count').textContent = `Шагов: ${data.steps.length}`;
+                data.steps.forEach(step => {
+                    const div = document.createElement('div');
+                    div.className = 'step';
+                    const it = String(step.iteration || '');
+                    if (it === 'Результат' || it.startsWith('Итог')) div.classList.add('result-step');
+                    else if (it === 'Ошибка') div.classList.add('error-step');
+                    else if (it === '⚠') div.classList.add('warn-step');
+                    else if (step.phase === 'init') div.classList.add('init-step');
+                    else if (step.phase === 'split' || step.phase === 'combine') div.classList.add('split-step');
+                    div.innerHTML = `<span class="step-num">[${step.iteration}]</span> ${escapeHtml(step.description)}`;
+                    cont.appendChild(div);
+                });
+                resultCard.classList.add('visible');
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('visible');
+            }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') runAlgo(); });
+    </script>
+</body>
+</html>

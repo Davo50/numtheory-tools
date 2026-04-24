@@ -1,0 +1,30 @@
+# ─── IDEs ───────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+ .venv/
+ 
+# ─── macOS / Windows / Linux ────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+ 
+# ─── Docker ─────────────────────────────────────────────────
+docker-compose.override.yml
+ 
+# ─── Secrets (never commit!) ────────────────────────────────
+*.pem
+*.key
+secrets.json
+credentials.json
+.env.secret

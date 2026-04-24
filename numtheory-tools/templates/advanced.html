@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Calculus и эллиптические кривые</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh; color: #e0e0e0; padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 {
+            text-align: center; font-size: 2.2em; margin-bottom: 30px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px; padding: 30px; margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .method-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px; margin-bottom: 25px;
+        }
+        .method-btn {
+            padding: 12px 16px; border: 2px solid rgba(102,126,234,.3);
+            border-radius: 10px; background: rgba(102,126,234,.1);
+            color: #a0a8d0; cursor: pointer; font-size: 0.85em;
+            font-weight: 600; transition: all 0.3s; text-align: center;
+        }
+        .method-btn:hover { border-color: #667eea; background: rgba(102,126,234,.2); color: #fff; }
+        .method-btn.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; box-shadow: 0 4px 15px rgba(102,126,234,.4);
+        }
+        .method-description {
+            padding: 12px 16px; background: rgba(0,0,0,.2);
+            border-radius: 10px; margin-bottom: 20px;
+            font-size: 0.9em; color: #b0b8d0; line-height: 1.6;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; margin-bottom: 6px; color: #b0b8d0;
+            font-size: 0.9em; font-weight: 500;
+        }
+        .form-group input {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+            background: rgba(255,255,255,.05); color: #fff;
+            font-size: 1em; font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .form-group input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 10px rgba(102,126,234,.2); }
+        .form-group .hint { font-size: 0.78em; color: #7a82a0; margin-top: 4px; }
+        .params-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+        .section-block { display: none; }
+        .section-block.visible { display: block; }
+        .subsection-title { font-size: 0.85em; color: #8890a8; margin-top: 10px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .h-mode { display: flex; gap: 10px; margin-bottom: 15px; padding: 4px; background: rgba(0,0,0,.25); border-radius: 8px; }
+        .h-mode label { flex: 1; text-align: center; padding: 8px; cursor: pointer; border-radius: 6px; font-size: 0.9em; color: #a0a8d0; transition: all 0.2s; }
+        .h-mode input[type="radio"] { display: none; }
+        .h-mode input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+        }
+        .btn-run {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; font-size: 1.1em; font-weight: 700; cursor: pointer;
+            transition: all 0.3s; margin-top: 10px;
+        }
+        .btn-run:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,.5); }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+        .result-card { display: none; }
+        .result-card.visible { display: block; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .result-header h2 { font-size: 1.4em; color: #667eea; }
+        .result-value {
+            font-size: 1.3em; font-weight: 700; text-align: center; padding: 15px;
+            background: rgba(102,126,234,.15); border-radius: 10px;
+            margin-bottom: 20px; color: #a8ff78; word-break: break-word;
+        }
+        .result-value.error { color: #ff6b6b; }
+        .steps-container { max-height: 600px; overflow-y: auto; padding-right: 5px; }
+        .steps-container::-webkit-scrollbar { width: 6px; }
+        .steps-container::-webkit-scrollbar-track { background: rgba(255,255,255,.05); border-radius: 3px; }
+        .steps-container::-webkit-scrollbar-thumb { background: rgba(102,126,234,.5); border-radius: 3px; }
+        .step {
+            padding: 10px 14px; margin-bottom: 6px;
+            background: rgba(255,255,255,.03);
+            border-left: 3px solid #667eea;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85em; line-height: 1.55; word-break: break-word;
+        }
+        .step .step-num { display: inline-block; min-width: 75px; color: #7a82a0; font-weight: 600; }
+        .step.result-step { border-left-color: #a8ff78; background: rgba(168,255,120,.08); color: #d0ffb0; }
+        .step.error-step { border-left-color: #ff6b6b; background: rgba(255,107,107,.08); color: #ffb0b0; }
+        .step.init-step { border-left-color: #ffd93d; background: rgba(255,217,61,.06); }
+        .step.relation-step { border-left-color: #a29bfe; background: rgba(162,155,254,.06); }
+        .step.phase-step { border-left-color: #ff9ff3; background: rgba(255,159,243,.08); font-weight: 600; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.visible { display: block; }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid rgba(102,126,234,.2);
+            border-top-color: #667eea; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .examples-block { margin-top: 10px; padding: 10px; background: rgba(0,0,0,.15); border-radius: 8px; font-size: .85em; color: #8890a8; }
+        .examples-block code {
+            cursor: pointer; background: rgba(102,126,234,.15);
+            padding: 3px 8px; border-radius: 5px; margin: 3px;
+            display: inline-block; color: #c0c8e8;
+        }
+        .examples-block code:hover { background: rgba(102,126,234,.3); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+          <a href="/" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Факторизация</a>
+          <a href="/gcd" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">НОД (Евклид)</a>
+          <a href="/tools" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Безу / CF / степень</a>
+          <a href="/dlog" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Дискретный log</a>
+          <a href="/advanced" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.25);color:#fff;text-decoration:none;font-weight:600">Index calc / EC</a>
+          <a href="/extra" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">F₂[X] / Монтгомери</a>
+          <a href="/notes" style="padding:8px 14px;border-radius:8px;background:rgba(102,126,234,.10);color:#a0a8d0;text-decoration:none;font-weight:600">Конспект Л1</a>
+        </nav>
+        <h1>🌌 Index Calculus и эллиптические кривые</h1>
+
+        <div class="card">
+            <div class="method-selector">
+                <button class="method-btn active" onclick="selectMethod('index_calc', this)">Index Calculus (Адлеман)</button>
+                <button class="method-btn" onclick="selectMethod('ec_add', this)">EC: P + Q</button>
+                <button class="method-btn" onclick="selectMethod('ec_double', this)">EC: 2P</button>
+                <button class="method-btn" onclick="selectMethod('ec_mult', this)">EC: k·P</button>
+                <button class="method-btn" onclick="selectMethod('ec_order', this)">EC: ord(P)</button>
+                <button class="method-btn" onclick="selectMethod('ec_ecdlp', this)">EC: ECDLP (BSGS)</button>
+            </div>
+
+            <div id="desc-index_calc" class="method-description">
+                <strong>Алгоритм Адлемана (Index Calculus)</strong>, Л5 стр. 24–27.
+                <br>Этап 1: собираем соотношения <code>g^kⱼ ≡ q₁^a₁ · ... · qₖ^aₖ (mod p)</code>, где qᵢ ∈ ℱ𝓑.
+                <br>Этап 2: решаем СЛАУ по модулю n = p−1, получаем <code>log_g qᵢ</code>.
+                <br>Этап 3: ищем r такое, что <code>y·g^r</code> разлагается по ℱ𝓑, тогда x = Σ βᵢ·log_g qᵢ − r.
+            </div>
+            <div id="desc-ec_add" class="method-description" style="display:none;">
+                <strong>Сложение точек на эллиптической кривой</strong> y² = x³ + ax + b (mod p), Л8 стр. 40.
+                <br><code>λ = (y₂ − y₁)/(x₂ − x₁)</code>, <code>x₃ = λ² − x₁ − x₂</code>, <code>y₃ = λ(x₁ − x₃) − y₁</code>.
+            </div>
+            <div id="desc-ec_double" class="method-description" style="display:none;">
+                <strong>Удвоение точки</strong>, Л8 стр. 42. <code>λ = (3x₁² + a)/(2y₁)</code>, далее как в сложении.
+            </div>
+            <div id="desc-ec_mult" class="method-description" style="display:none;">
+                <strong>Скалярное умножение k·P</strong> бинарным методом (double-and-add).
+                Сложность O(log k) операций в группе точек.
+            </div>
+            <div id="desc-ec_order" class="method-description" style="display:none;">
+                <strong>Порядок точки P</strong> на кривой. Простой перебор: ищем наименьшее k такое, что k·P = O.
+                По границе Хассе |E(F_p)| ≤ p + 1 + 2√p.
+            </div>
+            <div id="desc-ec_ecdlp" class="method-description" style="display:none;">
+                <strong>ECDLP через Baby-Step Giant-Step на кривой</strong>, Л8 (задача со стр. 107).
+                Дано: P, Q = k·P. Найти k. Аналог обычного BSGS: s = ⌈√n⌉, S = {Q + r·P}, T = {t·(sP)}, совпадение даёт k = ts − r.
+            </div>
+
+            <!-- Index Calculus -->
+            <div id="section-index_calc" class="section-block visible">
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="ic-g">g:</label>
+                        <input type="number" id="ic-g" value="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="ic-p">p:</label>
+                        <input type="number" id="ic-p" value="229">
+                    </div>
+                    <div class="form-group">
+                        <label for="ic-B">Граница B (опц.):</label>
+                        <input type="number" id="ic-B" placeholder="auto" value="11">
+                    </div>
+                    <div class="form-group">
+                        <label for="ic-seed">seed (опц.):</label>
+                        <input type="number" id="ic-seed" placeholder="auto" value="42">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Что задано?</label>
+                    <div class="h-mode">
+                        <input type="radio" id="ic-mode-x" name="icmode" value="x" checked>
+                        <label for="ic-mode-x">Степень x</label>
+                        <input type="radio" id="ic-mode-h" name="icmode" value="h">
+                        <label for="ic-mode-h">Значение h</label>
+                    </div>
+                </div>
+                <div id="ic-block-x" class="form-group">
+                    <label for="ic-x-known">Степень x:</label>
+                    <input type="number" id="ic-x-known" value="117">
+                    <div class="hint">Программа сама посчитает h = g^x mod p.</div>
+                </div>
+                <div id="ic-block-h" class="form-group" style="display:none;">
+                    <label for="ic-h">h:</label>
+                    <input type="number" id="ic-h" value="13">
+                </div>
+                <div class="examples-block">
+                    Пример из лекции Л5 стр. 25–27:
+                    <code onclick="setIC(6,229,13,11,42)">log₆ 13 mod 229 = 117</code>
+                </div>
+            </div>
+
+            <!-- EC: общие параметры кривой -->
+            <div id="section-ec" class="section-block">
+                <div class="subsection-title">Параметры кривой y² = x³ + a·x + b (mod p)</div>
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="ec-a">a:</label>
+                        <input type="number" id="ec-a" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label for="ec-b">b:</label>
+                        <input type="number" id="ec-b" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="ec-p">p:</label>
+                        <input type="number" id="ec-p" value="97">
+                    </div>
+                </div>
+
+                <div class="subsection-title">Точка P</div>
+                <div class="params-row">
+                    <div class="form-group">
+                        <label for="ec-Px">x:</label>
+                        <input type="number" id="ec-Px" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="ec-Py">y:</label>
+                        <input type="number" id="ec-Py" value="6">
+                    </div>
+                </div>
+
+                <div id="ec-Q-block" class="section-block visible">
+                    <div class="subsection-title">Точка Q</div>
+                    <div class="params-row">
+                        <div class="form-group">
+                            <label for="ec-Qx">x:</label>
+                            <input type="number" id="ec-Qx" value="80">
+                        </div>
+                        <div class="form-group">
+                            <label for="ec-Qy">y:</label>
+                            <input type="number" id="ec-Qy" value="10">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="ec-k-block" class="section-block">
+                    <div class="form-group">
+                        <label for="ec-k">Скаляр k:</label>
+                        <input type="number" id="ec-k" value="5">
+                    </div>
+                </div>
+
+                <div id="ec-ecdlp-block" class="section-block">
+                    <div class="form-group">
+                        <label>Что задано?</label>
+                        <div class="h-mode">
+                            <input type="radio" id="ec-mode-k" name="ecmode" value="k" checked>
+                            <label for="ec-mode-k">Скаляр k (посчитаем Q)</label>
+                            <input type="radio" id="ec-mode-Q" name="ecmode" value="Q">
+                            <label for="ec-mode-Q">Точка Q напрямую</label>
+                        </div>
+                    </div>
+                    <div id="ec-ecdlp-k" class="form-group">
+                        <label for="ec-k-known">k (истинный):</label>
+                        <input type="number" id="ec-k-known" value="7">
+                    </div>
+                </div>
+
+                <div class="examples-block">
+                    Примеры:
+                    <code onclick="setEC(2,3,97,3,6,80,10)">y²=x³+2x+3 mod 97, P=(3,6), Q=(80,10)</code>
+                    <code onclick="setEC(1,6,11,2,4,null,null,7)">y²=x³+x+6 mod 11, P=(2,4), k=7</code>
+                </div>
+            </div>
+
+            <button class="btn-run" id="btn-run" onclick="runAlgo()">Запустить</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Вычисление...</p>
+        </div>
+
+        <div class="card result-card" id="result-card">
+            <div class="result-header">
+                <h2>📊 Результат</h2>
+                <span id="step-count" style="color: #8890a8; font-size: 0.9em;"></span>
+            </div>
+            <div class="result-value" id="result-value"></div>
+            <h3 style="margin-bottom: 12px; color: #b0b8d0;">Пошаговые вычисления:</h3>
+            <div class="steps-container" id="steps-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'index_calc';
+
+        function selectMethod(method, btn) {
+            currentMethod = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.method-description').forEach(d => d.style.display = 'none');
+            document.getElementById('desc-' + method).style.display = 'block';
+
+            // Переключаем блоки
+            const ic = document.getElementById('section-index_calc');
+            const ec = document.getElementById('section-ec');
+            if (method === 'index_calc') {
+                ic.classList.add('visible'); ec.classList.remove('visible');
+            } else {
+                ic.classList.remove('visible'); ec.classList.add('visible');
+                // Внутри EC: показываем нужные подблоки
+                const Q = document.getElementById('ec-Q-block');
+                const K = document.getElementById('ec-k-block');
+                const D = document.getElementById('ec-ecdlp-block');
+                Q.classList.remove('visible'); K.classList.remove('visible'); D.classList.remove('visible');
+
+                if (method === 'ec_add') Q.classList.add('visible');
+                else if (method === 'ec_double' || method === 'ec_order') { /* ничего кроме P */ }
+                else if (method === 'ec_mult') K.classList.add('visible');
+                else if (method === 'ec_ecdlp') D.classList.add('visible');
+            }
+        }
+
+        document.querySelectorAll('input[name="icmode"]').forEach(r => {
+            r.addEventListener('change', () => {
+                document.getElementById('ic-block-x').style.display = (r.value === 'x' && r.checked) ? 'block' : 'none';
+                document.getElementById('ic-block-h').style.display = (r.value === 'h' && r.checked) ? 'block' : 'none';
+            });
+        });
+
+        function setIC(g, p, h, B, seed) {
+            document.getElementById('ic-g').value = g;
+            document.getElementById('ic-p').value = p;
+            document.getElementById('ic-h').value = h;
+            document.getElementById('ic-B').value = B;
+            document.getElementById('ic-seed').value = seed;
+            document.getElementById('ic-mode-h').checked = true;
+            document.getElementById('ic-block-x').style.display = 'none';
+            document.getElementById('ic-block-h').style.display = 'block';
+        }
+
+        function setEC(a, b, p, Px, Py, Qx, Qy, k) {
+            document.getElementById('ec-a').value = a;
+            document.getElementById('ec-b').value = b;
+            document.getElementById('ec-p').value = p;
+            document.getElementById('ec-Px').value = Px;
+            document.getElementById('ec-Py').value = Py;
+            if (Qx !== null && Qx !== undefined) {
+                document.getElementById('ec-Qx').value = Qx;
+                document.getElementById('ec-Qy').value = Qy;
+            }
+            if (k !== null && k !== undefined) {
+                document.getElementById('ec-k').value = k;
+                document.getElementById('ec-k-known').value = k;
+            }
+        }
+
+        async function runAlgo() {
+            const btn = document.getElementById('btn-run');
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('result-card');
+            btn.disabled = true;
+            loading.classList.add('visible');
+            resultCard.classList.remove('visible');
+
+            try {
+                let url, payload;
+                if (currentMethod === 'index_calc') {
+                    url = '/api/index_calculus';
+                    payload = {
+                        g: document.getElementById('ic-g').value,
+                        p: document.getElementById('ic-p').value,
+                        base_bound: document.getElementById('ic-B').value || null,
+                        seed: document.getElementById('ic-seed').value || null
+                    };
+                    const mode = document.querySelector('input[name="icmode"]:checked').value;
+                    if (mode === 'x') payload.x_known = document.getElementById('ic-x-known').value;
+                    else payload.h = document.getElementById('ic-h').value;
+                } else {
+                    url = '/api/elliptic';
+                    const method = currentMethod.replace('ec_', '');
+                    payload = {
+                        method: method === 'ecdlp' ? 'ecdlp' : method,
+                        a: document.getElementById('ec-a').value,
+                        b: document.getElementById('ec-b').value,
+                        p: document.getElementById('ec-p').value,
+                        Px: document.getElementById('ec-Px').value,
+                        Py: document.getElementById('ec-Py').value
+                    };
+                    if (currentMethod === 'ec_add') {
+                        payload.Qx = document.getElementById('ec-Qx').value;
+                        payload.Qy = document.getElementById('ec-Qy').value;
+                    } else if (currentMethod === 'ec_mult') {
+                        payload.k = document.getElementById('ec-k').value;
+                    } else if (currentMethod === 'ec_ecdlp') {
+                        const mode = document.querySelector('input[name="ecmode"]:checked').value;
+                        if (mode === 'k') payload.k_known = document.getElementById('ec-k-known').value;
+                        else {
+                            payload.Qx = document.getElementById('ec-Qx').value;
+                            payload.Qy = document.getElementById('ec-Qy').value;
+                        }
+                    }
+                }
+
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.error && !data.steps) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+                const rv = document.getElementById('result-value');
+                if (data.success) {
+                    rv.className = 'result-value';
+                    if (currentMethod === 'index_calc') {
+                        rv.textContent = `x = ${data.result}`;
+                    } else if (currentMethod === 'ec_order') {
+                        rv.textContent = `ord(P) = ${data.result}`;
+                    } else if (currentMethod === 'ec_ecdlp') {
+                        rv.textContent = `k = ${data.result}`;
+                    } else {
+                        rv.textContent = data.result ? `(${data.result[0]}, ${data.result[1]})` : 'O (бесконечность)';
+                    }
+                } else {
+                    rv.className = 'result-value error';
+                    rv.textContent = data.error || 'Не удалось вычислить';
+                }
+                const cont = document.getElementById('steps-container');
+                cont.innerHTML = '';
+                document.getElementById('step-count').textContent = `Шагов: ${data.steps.length}`;
+                data.steps.forEach(step => {
+                    const div = document.createElement('div');
+                    div.className = 'step';
+                    const it = String(step.iteration || '');
+                    if (it === 'Результат') div.classList.add('result-step');
+                    else if (it === 'Ошибка') div.classList.add('error-step');
+                    else if (step.phase === 'init') div.classList.add('init-step');
+                    else if (step.phase === 'relation' || step.phase === 'discrete_log') div.classList.add('relation-step');
+                    else if (step.phase === 'phase') div.classList.add('phase-step');
+                    div.innerHTML = `<span class="step-num">[${step.iteration}]</span> ${escapeHtml(step.description)}`;
+                    cont.appendChild(div);
+                });
+                resultCard.classList.add('visible');
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('visible');
+            }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        document.addEventListener('keydown', e => { if (e.key === 'Enter') runAlgo(); });
+    </script>
+</body>
+</html>
